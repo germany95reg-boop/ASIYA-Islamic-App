@@ -1,0 +1,32 @@
+name: ASIYA partner validation
+
+on:
+  push:
+    paths:
+      - 'partner-editor.html'
+      - 'tests/**'
+      - '.github/workflows/partner-tests.yml'
+  pull_request:
+    paths:
+      - 'partner-editor.html'
+      - 'tests/**'
+      - '.github/workflows/partner-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  partner-tests:
+    name: Partner validation regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run partner tests
+        run: node --test tests/partners.test.cjs
