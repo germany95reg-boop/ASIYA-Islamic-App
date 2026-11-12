@@ -98,7 +98,7 @@ async function loadAsiyaPartners(){
   if(!response.ok)throw Error('Partners unavailable');
   const data=await response.json();
   if(data.version!==1||!Array.isArray(data.partners))return;
-  asiyaApprovedPartners=data.partners.slice(0,20).filter(p=>p&&p.preview!==true);
+  asiyaApprovedPartners=asiyaPartnerPreview?[]:data.partners.slice(0,20).filter(p=>p&&p.preview!==true);
   if(asiyaPartnerPreview)asiyaApprovedPartners.unshift({id:'asiya-preview-'+asiyaPreviewPlacement,placement:asiyaPreviewPlacement,title:'Исламское образование',description:'Так будет выглядеть карточка будущего партнёра ASIYA. Это демонстрация дизайна, не настоящее рекламное предложение.',preview:true,enabled:true});
   renderAsiyaPartners();
  }catch{if(asiyaPartnerPreview){asiyaApprovedPartners=[{id:'asiya-preview-'+asiyaPreviewPlacement,placement:asiyaPreviewPlacement,title:'Исламское образование',description:'Так будет выглядеть карточка будущего партнёра ASIYA. Это демонстрация дизайна, не настоящее рекламное предложение.',preview:true,enabled:true}];renderAsiyaPartners()} /* No ads is the safe default. */ }
