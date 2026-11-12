@@ -37,6 +37,13 @@ stopSurahButton.onclick=stopAyahAudio;
 
 const surahList=document.getElementById('surah-list'),reader=document.getElementById('surah-reader');
 const offlineToggle=document.getElementById('offline-surahs-toggle'),offlineList=document.getElementById('offline-surahs-list');
+async function validOfflineQuranResponse(response,num){
+ if(!response||!response.ok)return false;
+ try{
+  const payload=await response.clone().json(),ayahs=payload?.data?.ayahs;
+  return payload.code===200&&Number(payload.data?.number)===num&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
+ }catch{return false}
+}
 async function refreshOfflineSurahs(){
  offlineList.replaceChildren();
  const info=document.createElement('p');info.className='muted';info.textContent='Проверяем сохранённые суры…';offlineList.append(info);
@@ -46,7 +53,7 @@ async function refreshOfflineSurahs(){
   for(const request of requests){
    const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
    if(!match)continue;const num=Number(match[1]);if(num<1||num>114)continue;
-   if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
+   const response=await cache.match(request);if(!(await validOfflineQuranResponse(response,num))){await cache.delete(request);quranEditionCache.delete(num+':'+match[2]);continue;}if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
   }
   offlineList.replaceChildren();
   const heading=document.createElement('p');heading.className='muted';
@@ -93,7 +100,7 @@ offlineDownloadButton.onclick=async()=>{
   const missing=[];
   for(const edition of editions){
    const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
-   if(!(await cache.match(url)))missing.push(edition);
+   const stored=await cache.match(url);if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
   }
   offlineDownloadProgress.max=Math.max(1,missing.length);
   if(!missing.length){
@@ -105,8 +112,7 @@ offlineDownloadButton.onclick=async()=>{
     const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
     const response=await fetch(url,{cache:'no-store'});
     if(!response.ok)throw Error('HTTP '+response.status);
-    const data=await response.clone().json();
-    if(data.code!==200||!Array.isArray(data.data?.ayahs)||!data.data.ayahs.length||!data.data.ayahs.every(a=>Number.isInteger(a.numberInSurah)&&typeof a.text==='string'))throw Error('Некорректные данные');
+    if(!(await validOfflineQuranResponse(response,num)))throw Error('Некорректные данные');
     await cache.put(url,response);
     offlineDownloadProgress.value=part+1;
     offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
