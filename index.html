@@ -44,10 +44,13 @@ async function validOfflineQuranResponse(response,num){
   return payload.code===200&&Number(payload.data?.number)===num&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
  }catch{return false}
 }
+let offlineScanRunning=false;
 async function refreshOfflineSurahs(){
+ if(offlineScanRunning)return;
+ offlineScanRunning=true;
  offlineList.replaceChildren();
  const info=document.createElement('p');info.className='muted';info.textContent='Проверяем сохранённые суры…';offlineList.append(info);
- if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';return;}
+ if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';offlineScanRunning=false;return;}
  try{
   const cache=await caches.open('asiya-quran-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
   for(const request of requests){
@@ -64,6 +67,9 @@ async function refreshOfflineSurahs(){
   const incomplete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].some(edition=>!parts.has(edition)));
   report.textContent='Проверка библиотеки: '+(invalidParts?'удалено повреждённых частей: '+invalidParts+'. ':'повреждённых частей не обнаружено. ')+(incomplete.length?'Неполных сур: '+incomplete.length+'. Для восстановления нажмите «Дозагрузить части».':'Все обнаруженные суры сохранены полностью.');
   offlineList.append(report);
+  const scanAgain=document.createElement('button');scanAgain.type='button';scanAgain.className='secondary';scanAgain.textContent='↻ Проверить снова';
+  scanAgain.onclick=()=>refreshOfflineSurahs();
+  offlineList.append(scanAgain);
   const storage=document.createElement('p');storage.className='muted';
   let bytes=0;
   const validRequests=await cache.keys();for(const request of validRequests){const response=await cache.match(request);if(response){try{bytes+=(await response.clone().arrayBuffer()).byteLength}catch(error){}}}
@@ -85,7 +91,7 @@ async function refreshOfflineSurahs(){
    }else row.append(button,detail,remove);
    offlineList.append(row);
   }
- }catch(error){info.textContent='Не удалось проверить офлайн-кеш. Попробуйте ещё раз.';offlineList.replaceChildren(info);}
+ }catch(error){info.textContent='Не удалось проверить офлайн-кеш. Попробуйте ещё раз.';offlineList.replaceChildren(info);const retry=document.createElement('button');retry.type='button';retry.className='secondary';retry.textContent='Повторить проверку';retry.onclick=()=>refreshOfflineSurahs();offlineList.append(retry);}finally{offlineScanRunning=false;}
 }
 offlineToggle.onclick=async()=>{const show=offlineList.classList.contains('hidden');offlineList.classList.toggle('hidden',!show);offlineToggle.setAttribute('aria-expanded',String(show));if(show)await refreshOfflineSurahs()};
 const offlineDownloadButton=document.getElementById('offline-download-current'),offlineSurahSelect=document.getElementById('offline-surah-select'),offlineDownloadStatus=document.getElementById('offline-download-status');
