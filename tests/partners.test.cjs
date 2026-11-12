@@ -72,3 +72,14 @@ test('partner configuration starts with no live ads', () => {
   assert.equal(config.version, 1);
   assert.deepEqual(config.partners, []);
 });
+
+test('publication export stops on blocking validation errors', () => {
+  const editor = fs.readFileSync(path.join(__dirname, '..', 'partner-editor.html'), 'utf8');
+  assert.ok(editor.includes("const blocking=validateReadyForPublication();if(blocking.length){"), 'Export must check blocking issues first');
+  assert.ok(editor.includes("Исправьте ошибки. Для резервной копии"), 'User must receive actionable feedback');
+  const exportStart=editor.indexOf("$('download').onclick=");
+  const exportEnd=editor.indexOf('function validateImport(',exportStart);
+  assert.ok(exportStart>=0 && exportEnd>exportStart, 'Export handler missing');
+  const handler=editor.slice(exportStart,exportEnd);
+  assert.ok(handler.indexOf('if(blocking.length)') < handler.indexOf('new Blob('), 'Blocking checks must precede file generation');
+});
