@@ -44,7 +44,7 @@ async function validOfflineQuranResponse(response,num){
   return payload.code===200&&Number(payload.data?.number)===num&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
  }catch{return false}
 }
-let offlineScanRunning=false,offlineLibraryFilter='all',offlineLibraryQuery='',offlineLibrarySort='number';
+let offlineScanRunning=false,offlineLibraryFilter='all',offlineLibraryQuery='',offlineLibrarySort='number';try{const prefs=JSON.parse(localStorage.getItem('asiya-offline-library-prefs')||'{}');if(['all','complete','incomplete'].includes(prefs.filter))offlineLibraryFilter=prefs.filter;if(['number','number-desc','name'].includes(prefs.sort))offlineLibrarySort=prefs.sort;}catch(error){}const saveOfflineLibraryPrefs=()=>{try{localStorage.setItem('asiya-offline-library-prefs',JSON.stringify({filter:offlineLibraryFilter,sort:offlineLibrarySort}));}catch(error){}};
 async function refreshOfflineSurahs(){
  if(offlineScanRunning)return;
  offlineScanRunning=true;
@@ -115,9 +115,9 @@ async function refreshOfflineSurahs(){
    emptySearch.hidden=shown!==0||ready.length===0;
    if(!emptySearch.hidden)emptySearch.textContent=offlineLibraryQuery.trim()?'По вашему запросу ничего не найдено. Попробуйте другое название или сбросьте поиск.':'В выбранной категории пока нет сохранённых сур.';
   };
-  filter.onchange=()=>{offlineLibraryFilter=filter.value;updateOfflineFilter();};
+  filter.onchange=()=>{offlineLibraryFilter=filter.value;saveOfflineLibraryPrefs();updateOfflineFilter();};
   search.oninput=()=>{offlineLibraryQuery=search.value;updateOfflineFilter();};
-  sort.onchange=()=>{offlineLibrarySort=sort.value;updateOfflineFilter();};
+  sort.onchange=()=>{offlineLibrarySort=sort.value;saveOfflineLibraryPrefs();updateOfflineFilter();};
   for(const [num,editions] of ready.sort((a,b)=>a[0]-b[0])){
    const row=document.createElement('article');row.className='offline-surah-card';const complete=['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>editions.has(edition));const head=document.createElement('div');head.className='offline-card-head';const title=document.createElement('span');title.className='offline-card-title';title.textContent=num+'. '+names[num-1];const status=document.createElement('span');status.className='offline-card-status'+(complete?'':' partial');status.textContent=complete?'✓ Сохранена полностью':'Неполная · '+editions.size+'/3';head.append(title,status);row.dataset.num=String(num);row.dataset.name=names[num-1];row.dataset.complete=String(complete);row.dataset.search=(num+' '+names[num-1]+' '+surahMeanings[num-1]).toLocaleLowerCase('ru').replace(/ё/g,'е');row.append(head);
    const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=num+'. '+names[num-1];button.disabled=!editions.has('quran-uthmani');button.title=button.disabled?'Сначала дозагрузите арабский текст':'';button.onclick=()=>openSurah(num);
