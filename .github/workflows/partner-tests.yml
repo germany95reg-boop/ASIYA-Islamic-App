@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'partner-editor.html'
+      - 'index.html'
+      - 'partners.json'
       - 'tests/**'
       - '.github/workflows/partner-tests.yml'
   pull_request:
