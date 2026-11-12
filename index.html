@@ -80,6 +80,10 @@ async function refreshOfflineSurahs(){
    clear.onclick=async()=>{if(!window.confirm('Удалить все сохранённые офлайн-суры? Избранное и прогресс чтения сохранятся.'))return;clear.disabled=true;try{for(const request of await cache.keys())await cache.delete(request);quranEditionCache.clear();await refreshOfflineSurahs()}catch(error){clear.disabled=false;clear.textContent='Не удалось очистить · Повторить'}};
    offlineList.append(clear);
   }
+  const preferencesRow=document.createElement('div');preferencesRow.className='reader-tools';
+  const resetPreferences=document.createElement('button');resetPreferences.type='button';resetPreferences.className='secondary';resetPreferences.textContent='↺ Сбросить настройки списка';
+  resetPreferences.onclick=()=>{offlineLibraryFilter='all';offlineLibrarySort='number';offlineLibraryQuery='';filter.value='all';sort.value='number';search.value='';saveOfflineLibraryPrefs();updateOfflineFilter();};
+  preferencesRow.append(resetPreferences);offlineList.append(preferencesRow);
   const filterRow=document.createElement('div');filterRow.className='reader-tools';
   const filterLabel=document.createElement('label');filterLabel.htmlFor='offline-library-filter';filterLabel.textContent='Показать';
   const filter=document.createElement('select');filter.id='offline-library-filter';filter.setAttribute('aria-label','Фильтр сохранённых сур');
