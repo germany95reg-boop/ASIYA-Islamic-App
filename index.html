@@ -176,10 +176,14 @@ offlineDownloadButton.onclick=async()=>{
    offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из '+missing.length+' недостающих частей…';
    for(const [part,edition] of missing.entries()){
     const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
-    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),20000);let response;try{response=await fetch(url,{cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
-    if(!response.ok)throw Error('HTTP '+response.status);
-    if(!(await validOfflineQuranResponse(response,num)))throw Error('Некорректные данные');
-    await cache.put(url,response);
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),20000);
+    try{
+     const response=await fetch(url,{cache:'no-store',signal:controller.signal});
+     if(!response.ok)throw Error('HTTP '+response.status);
+     if(!(await validOfflineQuranResponse(response.clone(),num)))throw Error('Некорректные данные');
+     if(controller.signal.aborted)throw new DOMException('Время ожидания истекло','AbortError');
+     await cache.put(url,response);
+    }finally{clearTimeout(timeout);}
     offlineDownloadProgress.value=part+1;
     notifyOfflineProgress(3-missing.length+part+1,3);
     offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
