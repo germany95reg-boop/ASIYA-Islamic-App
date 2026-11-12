@@ -129,7 +129,7 @@ async function refreshOfflineSurahs(){
    const liveProgress=document.createElement('span');liveProgress.className='muted offline-card-parts';liveProgress.hidden=true;liveProgress.setAttribute('role','status');
    const syncProgress=event=>{if(event.detail.num!==num)return;const {done,total}=event.detail;if(done<0)return;liveProgress.hidden=false;liveProgress.textContent=total?'Загрузка: '+done+' из '+total+' частей':'Подготовка загрузки…';if(total&&done>=0){cardProgress.value=done;cardProgress.setAttribute('aria-label','Загружено частей суры '+num+': '+done+' из '+total);}};
    window.addEventListener('asiya-offline-progress',syncProgress,{signal:offlineCardsAbort.signal});
-   window.addEventListener('asiya-offline-result',event=>{if(event.detail.num!==num)return;liveProgress.hidden=false;liveProgress.textContent=event.detail.success?'✓ Загрузка завершена':'Не удалось завершить загрузку. Попробуйте дозагрузить снова.';if(event.detail.success){cardProgress.value=3;cardProgress.setAttribute('aria-label','Сохранено частей суры '+num+': 3 из 3');}},{signal:offlineCardsAbort.signal});
+   window.addEventListener('asiya-offline-result',event=>{if(event.detail.num!==num)return;liveProgress.hidden=false;liveProgress.textContent=event.detail.success?'✓ Загрузка завершена':event.detail.cancelled?'Загрузка отменена. Сохранённые части доступны.':'Не удалось завершить загрузку. Попробуйте дозагрузить снова.';if(event.detail.success){cardProgress.value=3;cardProgress.setAttribute('aria-label','Сохранено частей суры '+num+': 3 из 3');}},{signal:offlineCardsAbort.signal});
    row.dataset.num=String(num);row.dataset.name=names[num-1];row.dataset.complete=String(complete);row.dataset.search=(num+' '+names[num-1]+' '+surahMeanings[num-1]).toLocaleLowerCase('ru').replace(/ё/g,'е');row.append(head,cardProgress,liveProgress);
    const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=num+'. '+names[num-1];button.disabled=!editions.has('quran-uthmani');button.title=button.disabled?'Сначала дозагрузите арабский текст':'';button.onclick=()=>openSurah(num);
    const detail=document.createElement('span');detail.className='muted';detail.textContent=(editions.has('quran-uthmani')?'Арабский текст':'Нет арабского текста')+(editions.has('ru.kuliev')?' · перевод':' · без перевода')+(editions.has('en.transliteration')?' · транскрипция':' · без транскрипции');
@@ -161,7 +161,7 @@ offlineDownloadButton.onclick=async()=>{
  offlineDownloadButton.disabled=true;offlineSurahSelect.disabled=true;
  const downloadController=new AbortController();offlineDownloadController=downloadController;offlineCancelButton.hidden=false;offlineCancelButton.disabled=false;offlineCancelButton.textContent='Отменить загрузку';
  const notifyOfflineProgress=(done,total)=>window.dispatchEvent(new CustomEvent('asiya-offline-progress',{detail:{num,done,total}}));
- const notifyOfflineResult=(success)=>window.dispatchEvent(new CustomEvent('asiya-offline-result',{detail:{num,success}}));
+ const notifyOfflineResult=(success,cancelled=false)=>window.dispatchEvent(new CustomEvent('asiya-offline-result',{detail:{num,success,cancelled}}));
  notifyOfflineProgress(0,0);
  offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');
  try{
@@ -214,7 +214,7 @@ offlineDownloadButton.onclick=async()=>{
   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
   notifyOfflineResult(true);
   if(!offlineList.classList.contains('hidden')){try{await refreshOfflineSurahs();}catch(error){offlineDownloadStatus.textContent+=' Обновите список офлайн-сур вручную.';}}
- }catch(error){const reason=downloadController.signal.aborted?'Загрузка отменена пользователем.':navigator.onLine===false?'Соединение с интернетом потеряно.':error?.name==='AbortError'?'Время ожидания истекло.':/^HTTP 429/.test(error?.message||'')?'Сервер ограничил частоту запросов.':/^HTTP 5/.test(error?.message||'')?'Сервер временно недоступен.':error?.message==='Некорректные данные'?'Сервер вернул некорректные данные.':error?.message==='Ошибка проверки сохранённых данных'?'Не удалось проверить запись в офлайн-хранилище.':'Не удалось завершить скачивание.';offlineDownloadStatus.textContent=reason+' Сохранённые части не удалены. Повторите дозагрузку.';notifyOfflineResult(false);}
+ }catch(error){const reason=downloadController.signal.aborted?'Загрузка отменена пользователем.':navigator.onLine===false?'Соединение с интернетом потеряно.':error?.name==='AbortError'?'Время ожидания истекло.':/^HTTP 429/.test(error?.message||'')?'Сервер ограничил частоту запросов.':/^HTTP 5/.test(error?.message||'')?'Сервер временно недоступен.':error?.message==='Некорректные данные'?'Сервер вернул некорректные данные.':error?.message==='Ошибка проверки сохранённых данных'?'Не удалось проверить запись в офлайн-хранилище.':'Не удалось завершить скачивание.';offlineDownloadStatus.textContent=reason+' Сохранённые части не удалены. Повторите дозагрузку.';notifyOfflineResult(false,downloadController.signal.aborted);}
  finally{notifyOfflineProgress(-1,3);offlineDownloadController=null;offlineCancelButton.hidden=true;offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
 };
 
