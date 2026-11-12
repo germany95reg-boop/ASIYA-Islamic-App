@@ -172,6 +172,7 @@ offlineDownloadButton.onclick=async()=>{
    const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
    const stored=await cache.match(url);if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
   }
+  if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
   offlineDownloadProgress.max=Math.max(1,missing.length);
   notifyOfflineProgress(3-missing.length,3);
   if(!missing.length){
@@ -199,6 +200,7 @@ offlineDownloadButton.onclick=async()=>{
     notifyOfflineProgress(3-missing.length+part+1,3);
     offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
    }
+   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
    const keys=await cache.keys();
    if(keys.length>18){
     const older=[...new Set(keys.map(key=>new URL(key.url).pathname.match(/\/v1\/surah\/(\d+)\//)?.[1]).filter(id=>id&&Number(id)!==num))];
@@ -209,8 +211,9 @@ offlineDownloadButton.onclick=async()=>{
    }
    offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена. Загружено частей: '+missing.length;
   }
-  if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
+  if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
   notifyOfflineResult(true);
+  if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
  }catch(error){const reason=downloadController.signal.aborted?'Загрузка отменена пользователем.':navigator.onLine===false?'Соединение с интернетом потеряно.':error?.name==='AbortError'?'Время ожидания истекло.':/^HTTP 429/.test(error?.message||'')?'Сервер ограничил частоту запросов.':/^HTTP 5/.test(error?.message||'')?'Сервер временно недоступен.':error?.message==='Некорректные данные'?'Сервер вернул некорректные данные.':error?.message==='Ошибка проверки сохранённых данных'?'Не удалось проверить запись в офлайн-хранилище.':'Не удалось завершить скачивание.';offlineDownloadStatus.textContent=reason+' Сохранённые части не удалены. Повторите дозагрузку.';notifyOfflineResult(false);}
  finally{notifyOfflineProgress(-1,3);offlineDownloadController=null;offlineCancelButton.hidden=true;offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
 };
