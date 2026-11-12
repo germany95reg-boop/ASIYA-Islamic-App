@@ -196,7 +196,7 @@ offlineDownloadButton.onclick=async()=>{
   }
   if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
   notifyOfflineResult(true);
- }catch(error){offlineDownloadStatus.textContent='Не удалось завершить скачивание. Уже сохранённые части останутся доступными.';notifyOfflineResult(false);}
+ }catch(error){const reason=navigator.onLine===false?'Соединение с интернетом потеряно.':error?.name==='AbortError'?'Время ожидания истекло.':/^HTTP 429/.test(error?.message||'')?'Сервер ограничил частоту запросов.':/^HTTP 5/.test(error?.message||'')?'Сервер временно недоступен.':error?.message==='Некорректные данные'?'Сервер вернул некорректные данные.':'Не удалось завершить скачивание.';offlineDownloadStatus.textContent=reason+' Сохранённые части не удалены. Повторите дозагрузку.';notifyOfflineResult(false);}
  finally{notifyOfflineProgress(-1,3);offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
 };
 
