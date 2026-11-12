@@ -57,7 +57,7 @@ async function refreshOfflineSurahs(){
    const row=document.createElement('div');row.className='reader-tools';
    const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=num+'. '+names[num-1];button.onclick=()=>openSurah(num);
    const detail=document.createElement('span');detail.className='muted';detail.textContent='Арабский текст'+(editions.has('ru.kuliev')?' · перевод':'')+(editions.has('en.transliteration')?' · транскрипция':'');
-   row.append(button,detail);offlineList.append(row);
+   const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Удалить офлайн';remove.setAttribute('aria-label','Удалить офлайн-копию суры '+num);remove.onclick=async()=>{remove.disabled=true;remove.textContent='Удаляем…';try{const editionsToRemove=['quran-uthmani','ru.kuliev','en.transliteration'];await Promise.all(editionsToRemove.map(async edition=>{const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;await cache.delete(url);quranEditionCache.delete(num+':'+edition)}));await refreshOfflineSurahs()}catch(error){remove.disabled=false;remove.textContent='Повторить удаление'}};row.append(button,detail,remove);offlineList.append(row);
   }
  }catch(error){info.textContent='Не удалось проверить офлайн-кеш. Попробуйте ещё раз.';offlineList.replaceChildren(info);}
 }
