@@ -73,8 +73,8 @@ const asiyaPreviewParams=new URLSearchParams(location.search);const asiyaPartner
 let asiyaApprovedPartners=[]; // Loaded from partners.json; never show unapproved inventory
 function renderAsiyaPartners(){
  for(const p of asiyaApprovedPartners){
-  if(!p||p.enabled!==true||!['home','learning'].includes(p.placement)||typeof p.id!=='string'||!/^[a-z0-9-]{1,48}$/.test(p.id)||typeof p.title!=='string'||!p.title.trim()||typeof p.description!=='string'||(!p.preview&&typeof p.url!=='string'))continue;
-  if(p.startAt&&(!Number.isFinite(Date.parse(p.startAt))||Date.now()<Date.parse(p.startAt)))continue;if(p.endAt&&(!Number.isFinite(Date.parse(p.endAt))||Date.now()>=Date.parse(p.endAt)))continue;let url=null;if(!p.preview){try{url=new URL(p.url);if(url.protocol!=='https:')continue}catch{continue}}
+  if(!p||p.enabled!==true||!['home','learning'].includes(p.placement)||typeof p.id!=='string'||!/^[a-z0-9-]{1,48}$/.test(p.id)||typeof p.title!=='string'||!p.title.trim()||typeof p.description!=='string'||(p.preview!==true&&typeof p.url!=='string')||p.title.length>90||p.description.length>250)continue;
+  if(p.preview===true&&!asiyaPartnerPreview)continue;if(p.preview===true&&p.id!=='asiya-preview-'+asiyaPreviewPlacement)continue;if(p.startAt&&(!Number.isFinite(Date.parse(p.startAt))||Date.now()<Date.parse(p.startAt)))continue;if(p.endAt&&(!Number.isFinite(Date.parse(p.endAt))||Date.now()>=Date.parse(p.endAt)))continue;if(p.startAt&&p.endAt&&Date.parse(p.endAt)<=Date.parse(p.startAt))continue;let url=null;if(!p.preview){try{url=new URL(p.url);if(url.protocol!=='https:'||!url.hostname||url.username||url.password)continue}catch{continue}}
   if(!p.preview){try{if(sessionStorage.getItem('asiya-partner-dismissed-'+p.id)==='1')continue}catch{}}
   const slot=document.querySelector('[data-partner-placement="'+p.placement+'"]');if(!slot||slot.children.length)continue;
   const card=document.createElement('aside');card.className='asiya-partner-card';card.setAttribute('aria-label','Рекламный материал');
@@ -95,7 +95,7 @@ async function loadAsiyaPartners(){
   if(!response.ok)throw Error('Partners unavailable');
   const data=await response.json();
   if(data.version!==1||!Array.isArray(data.partners))return;
-  asiyaApprovedPartners=data.partners.slice(0,20);
+  asiyaApprovedPartners=data.partners.slice(0,20).filter(p=>p&&p.preview!==true);
   if(asiyaPartnerPreview)asiyaApprovedPartners.unshift({id:'asiya-preview-'+asiyaPreviewPlacement,placement:asiyaPreviewPlacement,title:'Исламское образование',description:'Так будет выглядеть карточка будущего партнёра ASIYA. Это демонстрация дизайна, не настоящее рекламное предложение.',preview:true,enabled:true});
   renderAsiyaPartners();
  }catch{if(asiyaPartnerPreview){asiyaApprovedPartners=[{id:'asiya-preview-'+asiyaPreviewPlacement,placement:asiyaPreviewPlacement,title:'Исламское образование',description:'Так будет выглядеть карточка будущего партнёра ASIYA. Это демонстрация дизайна, не настоящее рекламное предложение.',preview:true,enabled:true}];renderAsiyaPartners()} /* No ads is the safe default. */ }
