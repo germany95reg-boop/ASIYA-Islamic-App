@@ -72,12 +72,25 @@ function campaignAudit(){
  return issues;
 }
 function validateReadyForPublication(){
- const problems=[];
+ const problems=[],ids=new Set();
+ if(partners.length>20)problems.push('Превышен лимит: приложение обрабатывает не более 20 партнёров.');
  for(const p of partners){
-  if(!p.enabled)continue;
-  if(!p.title.trim()||!p.description.trim())problems.push(p.id+': пустой текст');
-  try{const u=new URL(p.url);if(u.protocol!=='https:'||!u.hostname||u.username||u.password||blockedPartnerHost(u.hostname))problems.push(p.id+': небезопасная или внутренняя ссылка')}catch{problems.push(p.id+': неверная ссылка')}
-  if(p.endAt&&Date.parse(p.endAt)<=Date.now())problems.push(p.id+': срок уже завершён');
+  const id=typeof p?.id==='string'?p.id:'без ID';
+  if(!/^[a-z0-9-]{1,48}$/.test(id))problems.push(id+': некорректный ID');
+  if(ids.has(id))problems.push(id+': повторяющийся ID');
+  ids.add(id);
+  if(!p||p.enabled!==true)continue;
+  if(!['home','learning'].includes(p.placement))problems.push(id+': неизвестное место размещения');
+  if(typeof p.title!=='string'||!p.title.trim()||p.title.length>90||typeof p.description!=='string'||!p.description.trim()||p.description.length>250)problems.push(id+': пустой или слишком длинный текст');
+  try{
+   const u=new URL(p.url);
+   if(u.protocol!=='https:'||!u.hostname||u.username||u.password||blockedPartnerHost(u.hostname))problems.push(id+': небезопасная или внутренняя ссылка');
+  }catch{problems.push(id+': неверная ссылка')}
+  const start=p.startAt?Date.parse(p.startAt):null,end=p.endAt?Date.parse(p.endAt):null;
+  if(p.startAt&&!Number.isFinite(start))problems.push(id+': неверная дата начала');
+  if(p.endAt&&!Number.isFinite(end))problems.push(id+': неверная дата окончания');
+  if(Number.isFinite(start)&&Number.isFinite(end)&&end<=start)problems.push(id+': окончание должно быть позже начала');
+  if(Number.isFinite(end)&&end<=Date.now())problems.push(id+': срок уже завершён');
  }
  return problems;
 }
