@@ -183,6 +183,7 @@ offlineDownloadButton.onclick=async()=>{
      if(!(await validOfflineQuranResponse(response.clone(),num)))throw Error('Некорректные данные');
      if(controller.signal.aborted)throw new DOMException('Время ожидания истекло','AbortError');
      await cache.put(url,response);
+     if(controller.signal.aborted){await cache.delete(url);throw new DOMException('Время ожидания истекло','AbortError');}
     }finally{clearTimeout(timeout);}
     offlineDownloadProgress.value=part+1;
     notifyOfflineProgress(3-missing.length+part+1,3);
