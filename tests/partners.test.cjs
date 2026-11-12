@@ -58,3 +58,17 @@ test('rejects blank descriptions and invalid placement', () => {
   assert.match(problems([good({description:'  ',placement:'other'})]).join(' '), /пустой/);
   assert.match(problems([good({placement:'other'})]).join(' '), /место размещения/);
 });
+
+test('public app keeps real ads off during preview and labels sponsored links', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(app, /if\(asiyaPartnerPreview\)\{/);
+  assert.match(app, /rel='noopener noreferrer sponsored'/);
+  assert.match(app, /referrerPolicy='no-referrer'/);
+  assert.match(app, /data-partner-placement="home"/);
+  assert.match(app, /data-partner-placement="learning"/);
+});
+test('partner configuration starts with no live ads', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'partners.json'), 'utf8'));
+  assert.equal(config.version, 1);
+  assert.deepEqual(config.partners, []);
+});
