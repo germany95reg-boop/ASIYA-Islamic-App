@@ -49,17 +49,21 @@ async function refreshOfflineSurahs(){
  const info=document.createElement('p');info.className='muted';info.textContent='Проверяем сохранённые суры…';offlineList.append(info);
  if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';return;}
  try{
-  const cache=await caches.open('asiya-quran-v1'),requests=await cache.keys(),bySurah=new Map();
+  const cache=await caches.open('asiya-quran-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
   for(const request of requests){
    const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
    if(!match)continue;const num=Number(match[1]);if(num<1||num>114)continue;
-   const response=await cache.match(request);if(!(await validOfflineQuranResponse(response,num))){await cache.delete(request);quranEditionCache.delete(num+':'+match[2]);continue;}if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
+   const response=await cache.match(request);if(!(await validOfflineQuranResponse(response,num))){invalidParts++;await cache.delete(request);quranEditionCache.delete(num+':'+match[2]);continue;}if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
   }
   offlineList.replaceChildren();
   const heading=document.createElement('p');heading.className='muted';
   const ready=[...bySurah];
   const complete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>parts.has(edition))).length;heading.textContent=ready.length?'Сохранено сур: '+ready.length+' · полностью: '+complete+' · требуется дозагрузка: '+(ready.length-complete)+'. Офлайн-кеш ограничен 18 частями.':'Пока нет сохранённых сур. Откройте суру с интернетом или скачайте её выше.';
   offlineList.append(heading);
+  const report=document.createElement('p');report.className='muted';report.setAttribute('role','status');
+  const incomplete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].some(edition=>!parts.has(edition)));
+  report.textContent='Проверка библиотеки: '+(invalidParts?'удалено повреждённых частей: '+invalidParts+'. ':'повреждённых частей не обнаружено. ')+(incomplete.length?'Неполных сур: '+incomplete.length+'. Для восстановления нажмите «Дозагрузить части».':'Все обнаруженные суры сохранены полностью.');
+  offlineList.append(report);
   const storage=document.createElement('p');storage.className='muted';
   let bytes=0;
   const validRequests=await cache.keys();for(const request of validRequests){const response=await cache.match(request);if(response){try{bytes+=(await response.clone().arrayBuffer()).byteLength}catch(error){}}}
