@@ -97,7 +97,7 @@ async function loadAsiyaPartners(){
   const response=await fetch('./partners.json',{cache:'no-store'});
   if(!response.ok)throw Error('Partners unavailable');
   const data=await response.json();
-  if(data.version!==1||!Array.isArray(data.partners))return;
+  if(!data||data.version!==1||!Array.isArray(data.partners))return;
   const seenPartnerIds=new Set();
   asiyaApprovedPartners=asiyaPartnerPreview?[]:data.partners.slice(0,20).filter(p=>{
    if(!p||p.preview===true||typeof p.id!=='string'||seenPartnerIds.has(p.id))return false;
