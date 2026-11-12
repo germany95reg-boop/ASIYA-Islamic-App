@@ -44,7 +44,7 @@ async function validOfflineQuranResponse(response,num){
   return payload.code===200&&Number(payload.data?.number)===num&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
  }catch{return false}
 }
-let offlineScanRunning=false,offlineLibraryFilter='all',offlineLibraryQuery='',offlineLibrarySort='number';try{const prefs=JSON.parse(localStorage.getItem('asiya-offline-library-prefs')||'{}');if(['all','complete','incomplete'].includes(prefs.filter))offlineLibraryFilter=prefs.filter;if(['number','number-desc','name'].includes(prefs.sort))offlineLibrarySort=prefs.sort;}catch(error){}const saveOfflineLibraryPrefs=()=>{try{localStorage.setItem('asiya-offline-library-prefs',JSON.stringify({filter:offlineLibraryFilter,sort:offlineLibrarySort}));}catch(error){}};
+let offlineCardsAbort=null;let offlineScanRunning=false,offlineLibraryFilter='all',offlineLibraryQuery='',offlineLibrarySort='number';try{const prefs=JSON.parse(localStorage.getItem('asiya-offline-library-prefs')||'{}');if(['all','complete','incomplete'].includes(prefs.filter))offlineLibraryFilter=prefs.filter;if(['number','number-desc','name'].includes(prefs.sort))offlineLibrarySort=prefs.sort;}catch(error){}const saveOfflineLibraryPrefs=()=>{try{localStorage.setItem('asiya-offline-library-prefs',JSON.stringify({filter:offlineLibraryFilter,sort:offlineLibrarySort}));}catch(error){}};
 async function refreshOfflineSurahs(){
  if(offlineScanRunning)return;
  offlineScanRunning=true;
@@ -101,6 +101,7 @@ async function refreshOfflineSurahs(){
   for(const [value,label] of [['number','По номеру ↑'],['number-desc','По номеру ↓'],['name','По названию А–Я']]){const option=document.createElement('option');option.value=value;option.textContent=label;sort.append(option);}
   sort.value=offlineLibrarySort;
   filterRow.append(filterLabel,filter,searchLabel,search,resetSearch,sortLabel,sort,filterCount);offlineList.append(filterRow);
+  if(offlineCardsAbort)offlineCardsAbort.abort();offlineCardsAbort=new AbortController();
   const cards=document.createElement('div');offlineList.append(cards);
   const emptySearch=document.createElement('p');emptySearch.className='muted';emptySearch.setAttribute('role','status');emptySearch.hidden=true;offlineList.append(emptySearch);
   const updateOfflineFilter=()=>{
@@ -125,6 +126,9 @@ async function refreshOfflineSurahs(){
   for(const [num,editions] of ready.sort((a,b)=>a[0]-b[0])){
    const row=document.createElement('article');row.className='offline-surah-card';const complete=['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>editions.has(edition));const head=document.createElement('div');head.className='offline-card-head';const title=document.createElement('span');title.className='offline-card-title';title.textContent=num+'. '+names[num-1];const status=document.createElement('span');status.className='offline-card-status'+(complete?'':' partial');status.textContent=complete?'✓ Сохранена полностью':'Неполная · '+editions.size+'/3';head.append(title,status);
    const cardProgress=document.createElement('progress');cardProgress.max=3;cardProgress.value=editions.size;cardProgress.setAttribute('aria-label','Сохранено частей суры '+num+': '+editions.size+' из 3');cardProgress.style.width='100%';cardProgress.style.marginTop='10px';cardProgress.style.accentColor=complete?'#1b7555':'#b9872c';row.append(cardProgress);
+   const liveProgress=document.createElement('span');liveProgress.className='muted offline-card-parts';liveProgress.hidden=true;liveProgress.setAttribute('role','status');row.append(liveProgress);
+   const syncProgress=event=>{if(event.detail.num!==num)return;const {done,total}=event.detail;if(done<0){liveProgress.hidden=true;return;}liveProgress.hidden=false;liveProgress.textContent=total?'Загрузка: '+done+' из '+total+' частей':'Подготовка загрузки…';if(total&&done>=0){cardProgress.value=done;cardProgress.setAttribute('aria-label','Загружено частей суры '+num+': '+done+' из '+total);}};
+   window.addEventListener('asiya-offline-progress',syncProgress,{signal:offlineCardsAbort.signal});
    row.dataset.num=String(num);row.dataset.name=names[num-1];row.dataset.complete=String(complete);row.dataset.search=(num+' '+names[num-1]+' '+surahMeanings[num-1]).toLocaleLowerCase('ru').replace(/ё/g,'е');row.append(head);
    const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=num+'. '+names[num-1];button.disabled=!editions.has('quran-uthmani');button.title=button.disabled?'Сначала дозагрузите арабский текст':'';button.onclick=()=>openSurah(num);
    const detail=document.createElement('span');detail.className='muted';detail.textContent=(editions.has('quran-uthmani')?'Арабский текст':'Нет арабского текста')+(editions.has('ru.kuliev')?' · перевод':' · без перевода')+(editions.has('en.transliteration')?' · транскрипция':' · без транскрипции');
@@ -148,6 +152,8 @@ offlineDownloadButton.onclick=async()=>{
  if(!Number.isInteger(num)||num<1||num>114)return;
  if(navigator.onLine===false){offlineDownloadStatus.textContent='Нет подключения к интернету';return;}
  offlineDownloadButton.disabled=true;offlineSurahSelect.disabled=true;
+ const notifyOfflineProgress=(done,total)=>window.dispatchEvent(new CustomEvent('asiya-offline-progress',{detail:{num,done,total}}));
+ notifyOfflineProgress(0,0);
  offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');
  try{
   const cache=await caches.open('asiya-quran-v1');
@@ -158,6 +164,7 @@ offlineDownloadButton.onclick=async()=>{
    const stored=await cache.match(url);if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
   }
   offlineDownloadProgress.max=Math.max(1,missing.length);
+  notifyOfflineProgress(3-missing.length,3);
   if(!missing.length){
    offlineDownloadProgress.value=1;
    offlineDownloadStatus.textContent='✓ Сура '+num+' уже полностью сохранена';
@@ -170,6 +177,7 @@ offlineDownloadButton.onclick=async()=>{
     if(!(await validOfflineQuranResponse(response,num)))throw Error('Некорректные данные');
     await cache.put(url,response);
     offlineDownloadProgress.value=part+1;
+    notifyOfflineProgress(3-missing.length+part+1,3);
     offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
    }
    const keys=await cache.keys();
@@ -184,7 +192,7 @@ offlineDownloadButton.onclick=async()=>{
   }
   if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
  }catch(error){offlineDownloadStatus.textContent='Не удалось завершить скачивание. Уже сохранённые части останутся доступными.';}
- finally{offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
+ finally{notifyOfflineProgress(-1,3);offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
 };
 
 const savedSurahs=()=>{try{const data=JSON.parse(localStorage.getItem('asiya-saved-surahs')||'[]');return Array.isArray(data)?[...new Set(data.filter(n=>Number.isInteger(n)&&n>=1&&n<=114))]:[]}catch{return []}};
