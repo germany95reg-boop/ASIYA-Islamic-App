@@ -81,28 +81,50 @@ const offlineDownloadButton=document.getElementById('offline-download-current'),
 for(let i=0;i<names.length;i++){const option=document.createElement('option');option.value=String(i+1);option.textContent=(i+1)+'. '+names[i]+' — '+surahMeanings[i];offlineSurahSelect.append(option)}
 const offlineDownloadProgress=document.getElementById('offline-download-progress');
 offlineDownloadButton.onclick=async()=>{
- if(!('caches' in window)){offlineDownloadButton.textContent='Офлайн-хранилище недоступно';return;}
+ if(!('caches' in window)){offlineDownloadStatus.textContent='Офлайн-хранилище недоступно';return;}
  const num=Number(offlineSurahSelect.value);
  if(!Number.isInteger(num)||num<1||num>114)return;
- if(navigator.onLine===false){offlineDownloadButton.textContent='Нет подключения к интернету';return;}
- offlineDownloadButton.disabled=true;offlineSurahSelect.disabled=true;offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из 3 частей…';
+ if(navigator.onLine===false){offlineDownloadStatus.textContent='Нет подключения к интернету';return;}
+ offlineDownloadButton.disabled=true;offlineSurahSelect.disabled=true;
+ offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');
  try{
   const cache=await caches.open('asiya-quran-v1');
-  for(const [part,edition] of ['quran-uthmani','ru.kuliev','en.transliteration'].entries()){
+  const editions=['quran-uthmani','ru.kuliev','en.transliteration'];
+  const missing=[];
+  for(const edition of editions){
    const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
-   const response=await fetch(url,{cache:'no-store'});
-   if(!response.ok)throw Error('HTTP '+response.status);
-   const data=await response.clone().json();
-   if(data.code!==200||!Array.isArray(data.data?.ayahs)||!data.data.ayahs.length||!data.data.ayahs.every(a=>Number.isInteger(a.numberInSurah)&&typeof a.text==='string'))throw Error('Некорректные данные');
-   await cache.put(url,response);offlineDownloadProgress.value=part+1;offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из 3 частей…';
+   if(!(await cache.match(url)))missing.push(edition);
   }
-  const keys=await cache.keys();if(keys.length>18){const currentPrefix='/v1/surah/'+num+'/';const previous=keys.filter(k=>!new URL(k.url).pathname.includes(currentPrefix));for(const key of previous){if((await cache.keys()).length<=18)break;await cache.delete(key)}}
-  offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена';
+  offlineDownloadProgress.max=Math.max(1,missing.length);
+  if(!missing.length){
+   offlineDownloadProgress.value=1;
+   offlineDownloadStatus.textContent='✓ Сура '+num+' уже полностью сохранена';
+  }else{
+   offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из '+missing.length+' недостающих частей…';
+   for(const [part,edition] of missing.entries()){
+    const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const data=await response.clone().json();
+    if(data.code!==200||!Array.isArray(data.data?.ayahs)||!data.data.ayahs.length||!data.data.ayahs.every(a=>Number.isInteger(a.numberInSurah)&&typeof a.text==='string'))throw Error('Некорректные данные');
+    await cache.put(url,response);
+    offlineDownloadProgress.value=part+1;
+    offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
+   }
+   const keys=await cache.keys();
+   if(keys.length>18){
+    const older=[...new Set(keys.map(key=>new URL(key.url).pathname.match(/\/v1\/surah\/(\d+)\//)?.[1]).filter(id=>id&&Number(id)!==num))];
+    for(const id of older){
+     if((await cache.keys()).length<=18)break;
+     for(const key of await cache.keys())if(new URL(key.url).pathname.includes('/v1/surah/'+id+'/'))await cache.delete(key);
+    }
+   }
+   offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена. Загружено частей: '+missing.length;
+  }
   if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
- }catch(error){offlineDownloadStatus.textContent='Не удалось скачать суру. Проверь интернет и повтори попытку.';}
+ }catch(error){offlineDownloadStatus.textContent='Не удалось завершить скачивание. Уже сохранённые части останутся доступными.';}
  finally{offlineDownloadButton.disabled=false;offlineSurahSelect.disabled=false;offlineDownloadProgress.classList.add('hidden');}
 };
-
 
 const savedSurahs=()=>{try{const data=JSON.parse(localStorage.getItem('asiya-saved-surahs')||'[]');return Array.isArray(data)?[...new Set(data.filter(n=>Number.isInteger(n)&&n>=1&&n<=114))]:[]}catch{return []}};
 function updateOverallReadProgress(){let box=document.getElementById('overall-read-progress');if(!box){box=document.createElement('p');box.id='overall-read-progress';box.className='reader-progress';surahList.parentElement.insertBefore(box,surahList)}const unique=new Set(readVerseKeys().filter(key=>/^verse-(?:[1-9]|[1-9]\d|1[01]\d|114)-[1-9]\d*$/.test(key)));box.textContent='📖 Всего отмечено прочитанных аятов: '+unique.size;box.classList.toggle('hidden',!reader.classList.contains('hidden'))}let surahProgressFilter=false;let surahFavoritesFilter=false;let surahSort=localStorage.getItem('asiya-surah-sort')||'number';if(!['number','progress','favorites'].includes(surahSort))surahSort='number';function normalizeSurahSearch(value){return String(value).toLocaleLowerCase('ru').replace(/ё/g,'е').replace(/[«»"'’.,–—-]/g,' ').replace(/\s+/g,' ').trim()}function render(q=''){updateOverallReadProgress();const counts=new Map();for(const key of new Set(readVerseKeys())){const match=/^verse-(\d+)-(\d+)$/.exec(key);if(match){const surah=Number(match[1]);if(surah>=1&&surah<=114&&Number(match[2])>=1)counts.set(surah,(counts.get(surah)||0)+1)}}const normalizedQuery=normalizeSurahSearch(q);const favoriteIds=new Set(savedSurahs());const favoriteCounter=document.getElementById('surah-favorites-count');if(favoriteCounter)favoriteCounter.textContent='★ В избранном: '+favoriteIds.size;const filtered=names.map((name,i)=>({name,num:i+1})).filter(x=>(!surahProgressFilter||counts.has(x.num))&&(!surahFavoritesFilter||favoriteIds.has(x.num))&&(!normalizedQuery||normalizeSurahSearch(x.name).includes(normalizedQuery)||normalizeSurahSearch(surahMeanings[x.num-1]).includes(normalizedQuery)||String(x.num)===normalizedQuery));if(surahSort==='progress')filtered.sort((a,b)=>(counts.get(b.num)||0)-(counts.get(a.num)||0)||a.num-b.num);else if(surahSort==='favorites')filtered.sort((a,b)=>Number(favoriteIds.has(b.num))-Number(favoriteIds.has(a.num))||a.num-b.num);surahList.replaceChildren();const countLabel=document.getElementById('surah-results-count');if(countLabel)countLabel.textContent='Показано сур: '+filtered.length+' из 114';const continueButton=document.getElementById('surah-continue-reading');if(continueButton){const last=lastReading();const valid=last&&Number.isInteger(last.surah)&&last.surah>=1&&last.surah<=114&&Number.isInteger(last.ayah)&&last.ayah>=1;continueButton.hidden=!valid;if(valid)continueButton.textContent='↪ Продолжить: '+names[last.surah-1]+', аят '+last.ayah}const clearSearchButton=document.getElementById('surah-clear-search');if(clearSearchButton)clearSearchButton.hidden=!q.trim();const resetButton=document.querySelector('.surah-filter-reset');if(resetButton)resetButton.disabled=!surahProgressFilter&&!surahFavoritesFilter&&!q.trim()&&surahSort==='number';if(!filtered.length){const p=document.createElement('p');p.className='muted';p.textContent=surahProgressFilter||surahFavoritesFilter?'Нет сур по выбранным фильтрам. Попробуй сбросить фильтры.':'Ничего не найдено';surahList.append(p)}for(const item of filtered){const btn=document.createElement('button');btn.className='feature';const span=document.createElement('span');const strong=document.createElement('strong');strong.textContent=item.num+'. '+item.name;const meaning=document.createElement('span');meaning.className='surah-meaning';meaning.textContent='«'+surahMeanings[item.num-1]+'»';const small=document.createElement('small');small.textContent=(favoriteIds.has(item.num)?'★ В избранном · ':'')+(counts.has(item.num)?'📖 Отмечено аятов: '+counts.get(item.num):'Открыть арабский текст');span.append(strong,meaning,small);const arrow=document.createElement('span');arrow.textContent='→';btn.append(span,arrow);btn.onclick=()=>openSurah(item.num);const row=document.createElement('div');row.className='surah-list-row';const star=document.createElement('button');star.type='button';star.className='surah-quick-favorite';star.textContent=favoriteIds.has(item.num)?'★':'☆';star.setAttribute('aria-label',(favoriteIds.has(item.num)?'Убрать из избранного: ':'Добавить в избранное: ')+item.name);star.setAttribute('aria-pressed',String(favoriteIds.has(item.num)));star.onclick=()=>{const saved=new Set(savedSurahs());saved.has(item.num)?saved.delete(item.num):saved.add(item.num);try{localStorage.setItem('asiya-saved-surahs',JSON.stringify([...saved]))}catch{}render(document.getElementById('surah-search').value)};row.append(btn,star);surahList.append(row)}}
