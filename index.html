@@ -44,7 +44,7 @@ async function validOfflineQuranResponse(response,num){
   return payload.code===200&&Number(payload.data?.number)===num&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
  }catch{return false}
 }
-let offlineScanRunning=false;
+let offlineScanRunning=false,offlineLibraryFilter='all';
 async function refreshOfflineSurahs(){
  if(offlineScanRunning)return;
  offlineScanRunning=true;
@@ -80,8 +80,27 @@ async function refreshOfflineSurahs(){
    clear.onclick=async()=>{if(!window.confirm('Удалить все сохранённые офлайн-суры? Избранное и прогресс чтения сохранятся.'))return;clear.disabled=true;try{for(const request of await cache.keys())await cache.delete(request);quranEditionCache.clear();await refreshOfflineSurahs()}catch(error){clear.disabled=false;clear.textContent='Не удалось очистить · Повторить'}};
    offlineList.append(clear);
   }
+  const filterRow=document.createElement('div');filterRow.className='reader-tools';
+  const filterLabel=document.createElement('label');filterLabel.htmlFor='offline-library-filter';filterLabel.textContent='Показать';
+  const filter=document.createElement('select');filter.id='offline-library-filter';filter.setAttribute('aria-label','Фильтр сохранённых сур');
+  for(const [value,label] of [['all','Все суры'],['complete','Сохранены полностью'],['incomplete','Требуют дозагрузки']]){
+   const option=document.createElement('option');option.value=value;option.textContent=label;filter.append(option);
+  }
+  filter.value=offlineLibraryFilter;
+  const filterCount=document.createElement('span');filterCount.className='muted';filterCount.setAttribute('aria-live','polite');
+  filterRow.append(filterLabel,filter,filterCount);offlineList.append(filterRow);
+  const cards=document.createElement('div');offlineList.append(cards);
+  const updateOfflineFilter=()=>{
+   let shown=0;
+   for(const card of cards.children){
+    const visible=offlineLibraryFilter==='all'||(offlineLibraryFilter==='complete')===(card.dataset.complete==='true');
+    card.hidden=!visible;if(visible)shown++;
+   }
+   filterCount.textContent='Показано: '+shown+' из '+ready.length;
+  };
+  filter.onchange=()=>{offlineLibraryFilter=filter.value;updateOfflineFilter();};
   for(const [num,editions] of ready.sort((a,b)=>a[0]-b[0])){
-   const row=document.createElement('article');row.className='offline-surah-card';const complete=['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>editions.has(edition));const head=document.createElement('div');head.className='offline-card-head';const title=document.createElement('span');title.className='offline-card-title';title.textContent=num+'. '+names[num-1];const status=document.createElement('span');status.className='offline-card-status'+(complete?'':' partial');status.textContent=complete?'✓ Сохранена полностью':'Неполная · '+editions.size+'/3';head.append(title,status);row.append(head);
+   const row=document.createElement('article');row.className='offline-surah-card';const complete=['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>editions.has(edition));const head=document.createElement('div');head.className='offline-card-head';const title=document.createElement('span');title.className='offline-card-title';title.textContent=num+'. '+names[num-1];const status=document.createElement('span');status.className='offline-card-status'+(complete?'':' partial');status.textContent=complete?'✓ Сохранена полностью':'Неполная · '+editions.size+'/3';head.append(title,status);row.dataset.complete=String(complete);row.append(head);
    const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=num+'. '+names[num-1];button.disabled=!editions.has('quran-uthmani');button.title=button.disabled?'Сначала дозагрузите арабский текст':'';button.onclick=()=>openSurah(num);
    const detail=document.createElement('span');detail.className='muted';detail.textContent=(editions.has('quran-uthmani')?'Арабский текст':'Нет арабского текста')+(editions.has('ru.kuliev')?' · перевод':' · без перевода')+(editions.has('en.transliteration')?' · транскрипция':' · без транскрипции');
    const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Удалить офлайн';remove.setAttribute('aria-label','Удалить офлайн-копию суры '+num);remove.onclick=async()=>{remove.disabled=true;remove.textContent='Удаляем…';try{const editionsToRemove=['quran-uthmani','ru.kuliev','en.transliteration'];await Promise.all(editionsToRemove.map(async edition=>{const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;await cache.delete(url);quranEditionCache.delete(num+':'+edition)}));await refreshOfflineSurahs()}catch(error){remove.disabled=false;remove.textContent='Повторить удаление'}};if(!editions.has('quran-uthmani')||!editions.has('ru.kuliev')||!editions.has('en.transliteration')){
@@ -89,8 +108,9 @@ async function refreshOfflineSurahs(){
     repair.onclick=()=>{offlineSurahSelect.value=String(num);offlineDownloadButton.click();};
     const actions=document.createElement('div');actions.className='offline-card-actions';actions.append(button,repair,remove);detail.className='muted offline-card-parts';row.append(detail,actions);
    }else{const actions=document.createElement('div');actions.className='offline-card-actions';actions.append(button,remove);detail.className='muted offline-card-parts';row.append(detail,actions);}
-   offlineList.append(row);
+   cards.append(row);
   }
+  updateOfflineFilter();
  }catch(error){info.textContent='Не удалось проверить офлайн-кеш. Попробуйте ещё раз.';offlineList.replaceChildren(info);const retry=document.createElement('button');retry.type='button';retry.className='secondary';retry.textContent='Повторить проверку';retry.onclick=()=>refreshOfflineSurahs();offlineList.append(retry);}finally{offlineScanRunning=false;}
 }
 offlineToggle.onclick=async()=>{const show=offlineList.classList.contains('hidden');offlineList.classList.toggle('hidden',!show);offlineToggle.setAttribute('aria-expanded',String(show));if(show)await refreshOfflineSurahs()};
