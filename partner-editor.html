@@ -79,7 +79,8 @@ function validateReadyForPublication(){
   if(!/^[a-z0-9-]{1,48}$/.test(id))problems.push(id+': некорректный ID');
   if(ids.has(id))problems.push(id+': повторяющийся ID');
   ids.add(id);
-  if(!p||p.enabled!==true)continue;
+  if(!p||typeof p!=='object'){problems.push(id+': запись партнёра должна быть объектом');continue;}
+  if(p.enabled!==true)continue;
   if(!['home','learning'].includes(p.placement))problems.push(id+': неизвестное место размещения');
   if(typeof p.title!=='string'||!p.title.trim()||p.title.length>90||typeof p.description!=='string'||!p.description.trim()||p.description.length>250)problems.push(id+': пустой или слишком длинный текст');
   try{
