@@ -51,7 +51,7 @@ async function refreshOfflineSurahs(){
   offlineList.replaceChildren();
   const heading=document.createElement('p');heading.className='muted';
   const ready=[...bySurah].filter(([,editions])=>editions.has('quran-uthmani'));
-  heading.textContent=ready.length?'Сохранено сур: '+ready.length+'. Для офлайн-чтения доступны только ранее загруженные данные.':'Пока нет сохранённых сур. Откройте суру с интернетом, затем вернитесь сюда.';
+  heading.textContent=ready.length?'Сохранено сур: '+ready.length+'. Для офлайн-чтения доступны только ранее загруженные данные. Хранилище ограничено примерно шестью полными сурами.':'Пока нет сохранённых сур. Откройте суру с интернетом или скачайте её выше.';
   offlineList.append(heading);
   for(const [num,editions] of ready.sort((a,b)=>a[0]-b[0])){
    const row=document.createElement('div');row.className='reader-tools';
@@ -81,7 +81,7 @@ offlineDownloadButton.onclick=async()=>{
    if(data.code!==200||!Array.isArray(data.data?.ayahs)||!data.data.ayahs.length||!data.data.ayahs.every(a=>Number.isInteger(a.numberInSurah)&&typeof a.text==='string'))throw Error('Некорректные данные');
    await cache.put(url,response);offlineDownloadProgress.value=part+1;offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из 3 частей…';
   }
-  const keys=await cache.keys();if(keys.length>18)await Promise.all(keys.slice(0,keys.length-18).map(k=>cache.delete(k)));
+  const keys=await cache.keys();if(keys.length>18){const currentPrefix='/v1/surah/'+num+'/';const previous=keys.filter(k=>!new URL(k.url).pathname.includes(currentPrefix));for(const key of previous){if((await cache.keys()).length<=18)break;await cache.delete(key)}}
   offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена';
   if(!offlineList.classList.contains('hidden'))await refreshOfflineSurahs();
  }catch(error){offlineDownloadStatus.textContent='Не удалось скачать суру. Проверь интернет и повтори попытку.';}
