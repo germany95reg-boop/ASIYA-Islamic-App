@@ -176,7 +176,7 @@ offlineDownloadButton.onclick=async()=>{
    offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из '+missing.length+' недостающих частей…';
    for(const [part,edition] of missing.entries()){
     const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
-    const response=await fetch(url,{cache:'no-store'});
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),20000);let response;try{response=await fetch(url,{cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
     if(!response.ok)throw Error('HTTP '+response.status);
     if(!(await validOfflineQuranResponse(response,num)))throw Error('Некорректные данные');
     await cache.put(url,response);
