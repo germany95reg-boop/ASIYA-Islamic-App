@@ -76,8 +76,10 @@ function renderAsiyaPartners(){
   if(!p||p.enabled!==true||!['home','learning'].includes(p.placement)||typeof p.id!=='string'||!/^[a-z0-9-]{1,48}$/.test(p.id)||typeof p.title!=='string'||!p.title.trim()||typeof p.description!=='string'||(p.preview!==true&&typeof p.url!=='string')||p.title.length>90||p.description.length>250)continue;
   if(p.preview===true&&!asiyaPartnerPreview)continue;if(p.preview===true&&p.id!=='asiya-preview-'+asiyaPreviewPlacement)continue;if(p.startAt&&(!Number.isFinite(Date.parse(p.startAt))||Date.now()<Date.parse(p.startAt)))continue;if(p.endAt&&(!Number.isFinite(Date.parse(p.endAt))||Date.now()>=Date.parse(p.endAt)))continue;if(p.startAt&&p.endAt&&Date.parse(p.endAt)<=Date.parse(p.startAt))continue;let url=null;if(!p.preview){try{url=new URL(p.url);if(url.protocol!=='https:'||!url.hostname||url.username||url.password)continue}catch{continue}}
   if(!p.preview){try{if(sessionStorage.getItem('asiya-partner-dismissed-'+p.id)==='1')continue}catch{}}
+  if(!p.preview&&(!p.title.trim()||!p.description.trim()||p.title.length>90||p.description.length>250))continue;
   if(p.url&&typeof p.url==='string'&&!p.preview){try{const hostname=new URL(p.url).hostname.toLowerCase();if(hostname==='localhost'||hostname.endsWith('.localhost')||hostname.endsWith('.local')||hostname.endsWith('.internal')||hostname==='127.0.0.1'||hostname==='[::1]')continue}catch{continue}}
   const slot=document.querySelector('[data-partner-placement="'+p.placement+'"]');if(!slot||slot.children.length)continue;
+  if(!p.preview&&slot.dataset.partnerRendered==='true')continue;
   const card=document.createElement('aside');card.className='asiya-partner-card';card.setAttribute('aria-label','Рекламный материал');
   const head=document.createElement('div');head.className='asiya-partner-head';
   const label=document.createElement('span');label.textContent=p.preview?'ДЕМО · ПРЕДПРОСМОТР (НЕ РЕКЛАМА)':'Реклама · ASIYA Islamic Partners';
@@ -86,7 +88,7 @@ function renderAsiyaPartners(){
   const title=document.createElement('h3');title.className='asiya-partner-title';title.textContent=p.title.slice(0,90);
   const desc=document.createElement('p');desc.className='asiya-partner-description';desc.textContent=p.description.slice(0,250);
   const link=document.createElement('a');link.className='asiya-partner-link';if(p.preview){link.textContent='Пример кнопки · без перехода';link.setAttribute('aria-disabled','true');link.style.opacity='.55';link.style.pointerEvents='none'}else{link.href=url.href;link.target='_blank';link.rel='noopener noreferrer sponsored';link.textContent='Подробнее ↗'}
-  card.append(head,title,desc,link);slot.append(card);
+  card.append(head,title,desc,link);slot.append(card);if(!p.preview)slot.dataset.partnerRendered='true';
   if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){card.classList.add('is-visible');observer.disconnect()}},{threshold:.15});observer.observe(card)}else card.classList.add('is-visible');
  }
 }
