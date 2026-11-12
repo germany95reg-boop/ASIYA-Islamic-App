@@ -87,7 +87,7 @@ function renderAsiyaPartners(){
   head.append(label,close);
   const title=document.createElement('h3');title.className='asiya-partner-title';title.textContent=p.title.slice(0,90);
   const desc=document.createElement('p');desc.className='asiya-partner-description';desc.textContent=p.description.slice(0,250);
-  const link=document.createElement('a');link.className='asiya-partner-link';if(p.preview){link.textContent='Пример кнопки · без перехода';link.setAttribute('aria-disabled','true');link.style.opacity='.55';link.style.pointerEvents='none'}else{link.href=url.href;link.target='_blank';link.rel='noopener noreferrer sponsored';link.textContent='Подробнее ↗'}
+  const link=document.createElement('a');link.className='asiya-partner-link';if(p.preview){link.textContent='Пример кнопки · без перехода';link.setAttribute('aria-disabled','true');link.style.opacity='.55';link.style.pointerEvents='none'}else{link.href=url.href;link.target='_blank';link.rel='noopener noreferrer sponsored';link.referrerPolicy='no-referrer';link.setAttribute('aria-label','Открыть сайт партнёра в новой вкладке: '+url.hostname);link.textContent='Подробнее ↗'}
   card.append(head,title,desc,link);slot.append(card);if(!p.preview)slot.dataset.partnerRendered='true';
   if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){card.classList.add('is-visible');observer.disconnect()}},{threshold:.15});observer.observe(card)}else card.classList.add('is-visible');
  }
