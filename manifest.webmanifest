@@ -1,0 +1,19 @@
+{
+  "name": "ASIYA — Islamic App",
+  "short_name": "ASIYA",
+  "description": "Коран, намаз, дуа и исламские знания",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f7f2",
+  "theme_color": "#123f36",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
