@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>ASIYA · Редактор партнёров</title><style>
+:root{font-family:system-ui,-apple-system,sans-serif;background:#f8f7f2;color:#17382f}*{box-sizing:border-box}body{margin:0}.wrap{max-width:760px;margin:auto;padding:22px 18px 60px}h1{font-size:25px}p{line-height:1.5}.muted{color:#63746b}.panel{background:white;border:1px solid #e3e9e2;border-radius:19px;padding:18px;margin:15px 0}label{display:block;font-size:13px;font-weight:600;margin:13px 0 5px}input,textarea,select{width:100%;border:1px solid #cbdad0;border-radius:11px;padding:12px;font:inherit;background:white;color:inherit}textarea{min-height:85px;resize:vertical}button{border:0;border-radius:12px;padding:12px 16px;background:#176b54;color:white;font:inherit;cursor:pointer}button.secondary{background:#e9f1eb;color:#176b54}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}.row>*{flex:1}.preview{background:linear-gradient(130deg,#fffdf6,#f0f6f0);border:1px solid #dce7db;border-radius:18px;padding:18px}.eyebrow{font-size:11px;color:#65776c;letter-spacing:.7px}.preview h2{font-size:18px;margin:13px 0 7px}.preview p{font-size:14px}.preview a{display:inline-block;background:#176b54;color:white;border-radius:10px;padding:10px 14px;text-decoration:none;pointer-events:none;opacity:.65}.notice{font-size:13px;color:#735c30;background:#fff7e7;border-radius:12px;padding:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}#status{min-height:24px} @media(prefers-reduced-motion:no-preference){.preview{animation:rise .55s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
+</style></head><body><main class="wrap"><h1>ASIYA · Редактор партнёров</h1><p class="muted">Локальный инструмент для подготовки кампании. Данные не отправляются на сервер и не публикуются автоматически.</p><div class="notice">Это не защищённая административная панель. Не вводите пароли и секретные данные. Для публикации нужен отдельный ручной коммит в GitHub.</div>
+<section class="panel"><h2>Новая кампания</h2>
+<label for="id">Идентификатор (латиница, цифры, дефис)</label><input id="id" maxlength="48" placeholder="islamic-books-2027">
+<label for="placement">Размещение</label><select id="placement"><option value="home">Главная</option><option value="learning">Знания</option></select>
+<label for="title">Заголовок</label><input id="title" maxlength="90" placeholder="Название партнёра">
+<label for="description">Описание</label><textarea id="description" maxlength="250" placeholder="Краткое проверенное описание"></textarea>
+<label for="url">HTTPS-ссылка</label><input id="url" type="url" placeholder="https://example.org/">
+<label for="startAt">Начало показа (необязательно)</label><input id="startAt" type="datetime-local">
+<label for="endAt">Конец показа (необязательно)</label><input id="endAt" type="datetime-local">
+<label><input id="enabled" type="checkbox" style="width:auto"> Включить кампанию (после ручной публикации)</label>
+<div class="row"><button id="add" type="button">Добавить в список</button><button id="clear" type="button" class="secondary">Очистить поля</button></div><p id="status" role="status" aria-live="polite"></p></section>
+<section class="panel"><h2>Предпросмотр</h2><div class="preview" aria-label="Демонстрация рекламной карточки"><div class="eyebrow">РЕКЛАМА · ASIYA Islamic Partners</div><h2 id="preview-title">Название партнёра</h2><p id="preview-description">Описание будущего предложения.</p><a aria-disabled="true">Подробнее ↗</a></div></section>
+<section class="panel"><h2>Список кампаний <span id="count">(0)</span></h2><div id="items" class="muted">Пока нет записей.</div><div class="row"><button id="download" type="button">Скачать partners.json</button><button id="reset" type="button" class="secondary">Очистить список</button></div><p class="muted">Скачанный файл можно вручную загрузить вместо <code>partners.json</code> в репозитории. Перед публикацией проверьте все ссылки и соответствие содержания правилам ASIYA.</p></section></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),partners=[];
+const fields=['id','placement','title','description','url','startAt','endAt','enabled'];
+function setStatus(message){$('status').textContent=message}
+function preview(){$('preview-title').textContent=$('title').value.trim()||'Название партнёра';$('preview-description').textContent=$('description').value.trim()||'Описание будущего предложения.'}
+$('title').addEventListener('input',preview);$('description').addEventListener('input',preview);
+function iso(value){return value?new Date(value).toISOString():undefined}
+function collect(){
+ const id=$('id').value.trim(),title=$('title').value.trim(),description=$('description').value.trim(),rawUrl=$('url').value.trim();
+ if(!/^[a-z0-9-]{1,48}$/.test(id))throw Error('Неверный идентификатор.');
+ if(!title||!description)throw Error('Укажите заголовок и описание.');
+ let url;try{url=new URL(rawUrl)}catch{throw Error('Укажите корректную ссылку.')}
+ if(url.protocol!=='https:')throw Error('Разрешены только HTTPS-ссылки.');
+ const startAt=iso($('startAt').value),endAt=iso($('endAt').value);
+ if(startAt&&endAt&&Date.parse(endAt)<=Date.parse(startAt))throw Error('Окончание должно быть позже начала.');
+ return {id,placement:$('placement').value,title,description,url:url.href,enabled:$('enabled').checked,...(startAt?{startAt}:{}),...(endAt?{endAt}:{})};
+}
+function draw(){
+ $('count').textContent='('+partners.length+')';$('items').replaceChildren();
+ if(!partners.length){$('items').textContent='Пока нет записей.';return}
+ for(const [index,p] of partners.entries()){
+  const row=document.createElement('div');row.className='panel';row.style.margin='8px 0';
+  const title=document.createElement('strong');title.textContent=p.title+' · '+p.placement;
+  const detail=document.createElement('p');detail.className='muted';detail.textContent=p.id+' · '+(p.enabled?'Включена':'Выключена');
+  const remove=document.createElement('button');remove.className='secondary';remove.textContent='Удалить';remove.onclick=()=>{partners.splice(index,1);draw()};
+  row.append(title,detail,remove);$('items').append(row)
+ }
+}
+$('add').onclick=()=>{try{const p=collect();if(partners.some(x=>x.id===p.id))throw Error('Такой ID уже есть.');if(partners.length>=20)throw Error('Максимум 20 кампаний.');partners.push(p);draw();setStatus('Кампания добавлена локально. Для публикации скачайте JSON.')}catch(e){setStatus(e.message)}};
+$('clear').onclick=()=>{for(const id of fields){const el=$(id);if(el.type==='checkbox')el.checked=false;else if(el.tagName==='SELECT')el.selectedIndex=0;else el.value=''}preview();setStatus('Поля очищены.')};
+$('reset').onclick=()=>{if(confirm('Очистить локальный список кампаний?')){partners.length=0;draw();setStatus('Список очищен.')}};
+$('download').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,partners},null,2)+'\n'],{type:'application/json'});const link=document.createElement('a');const url=URL.createObjectURL(blob);link.href=url;link.download='partners.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('Файл подготовлен. Он не опубликован автоматически.')};
+draw();
+</script></body></html>
