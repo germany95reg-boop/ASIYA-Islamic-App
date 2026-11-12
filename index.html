@@ -73,7 +73,7 @@ const asiyaPreviewParams=new URLSearchParams(location.search);const asiyaPartner
 let asiyaApprovedPartners=[]; // Loaded from partners.json; never show unapproved inventory
 function renderAsiyaPartners(){
  for(const p of asiyaApprovedPartners){
-  if(!p||p.enabled!==true||!['home','learning'].includes(p.placement)||typeof p.id!=='string'||!/^[a-z0-9-]{1,48}$/.test(p.id)||typeof p.title!=='string'||!p.title.trim()||typeof p.description!=='string'||(p.preview!==true&&typeof p.url!=='string')||p.title.length>90||p.description.length>250)continue;
+  if(!p||p.enabled!==true||!['home','learning'].includes(p.placement)||typeof p.id!=='string'||!/^[a-z0-9-]{1,48}$/.test(p.id)||typeof p.title!=='string'||!p.title.trim()||typeof p.description!=='string'||!p.description.trim()||(p.preview!==true&&typeof p.url!=='string')||p.title.length>90||p.description.length>250)continue;
   if(p.preview===true&&!asiyaPartnerPreview)continue;if(p.preview===true&&p.id!=='asiya-preview-'+asiyaPreviewPlacement)continue;if(p.startAt&&(!Number.isFinite(Date.parse(p.startAt))||Date.now()<Date.parse(p.startAt)))continue;if(p.endAt&&(!Number.isFinite(Date.parse(p.endAt))||Date.now()>=Date.parse(p.endAt)))continue;if(p.startAt&&p.endAt&&Date.parse(p.endAt)<=Date.parse(p.startAt))continue;let url=null;if(!p.preview){try{url=new URL(p.url);if(url.protocol!=='https:'||!url.hostname||url.username||url.password)continue}catch{continue}}
   if(!p.preview){try{if(sessionStorage.getItem('asiya-partner-dismissed-'+p.id)==='1')continue}catch{}}
   if(!p.preview&&(!p.title.trim()||!p.description.trim()||p.title.length>90||p.description.length>250))continue;
