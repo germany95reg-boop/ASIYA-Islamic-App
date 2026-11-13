@@ -50,7 +50,7 @@ test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
 });
 
 test('Quran API refreshes online before using offline fallback',()=>{
- assert.match(sw,/const saved=await cache\.match\(request\);let response;try\{response=await fetch\(request\)\}catch\(error\)\{if\(saved\)return saved;throw error\}/);
+ assert.ok(sw.includes('response=await fetch(request)'));\n assert.ok(sw.includes('if(saved&&await validQuranCacheResponse(saved,url))return saved'));
  assert.match(sw,/response\.ok&&response\.type!=='opaque'/);
  assert.match(sw,/payload\.code===200/);
  assert.match(sw,/QURAN_CACHE_LIMIT=18/);
@@ -91,4 +91,11 @@ test('independent 114-surah Kufan/Hafs verse counts are consistent across app an
  assert.ok(html.includes('json.data?.ayahs?.length!==QURAN_VERSE_COUNTS[num-1]'));
  assert.ok(html.includes('ayahs?.length===QURAN_VERSE_COUNTS[num-1]'));
  assert.ok(sw.includes('payload.data.ayahs.length===QURAN_VERSE_COUNTS['));
+});
+
+test('corrupted Quran cache is rejected before offline fallback',()=>{
+ assert.ok(sw.includes('async function validQuranCacheResponse(response,url)'));
+ assert.ok(sw.includes('ayahs.length===QURAN_VERSE_COUNTS[num-1]'));
+ assert.ok(sw.includes('a?.numberInSurah===i+1'));
+ assert.ok(sw.includes('if(saved)await cache.delete(request);throw error'));
 });
