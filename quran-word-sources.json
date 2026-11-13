@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "description": "Registry for reviewed Quran word-by-word annotations. No annotations are published until provenance and permission are verified.",
+  "status": "draft-no-approved-entries",
+  "requirements": {
+    "reference": "surah:ayah",
+    "wordIndex": "1-based index of whitespace-delimited display token; not a morphological segment",
+    "arabicToken": "exact Unicode token matching Quran edition",
+    "meaningRu": "reviewed Russian word meaning, not full-ayah translation",
+    "readingRu": "optional, reviewed learning aid; never a substitute for tajwid",
+    "sourceName": "required",
+    "sourceUrl": "required HTTPS URL",
+    "license": "required; explicit redistribution permission",
+    "reviewedBy": "required named reviewer",
+    "reviewedAt": "required ISO date"
+  },
+  "entries": []
+}
