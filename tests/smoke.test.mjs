@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {compareExactQuranText,validateReferenceProvenance} from './compare-quran-reference.mjs';
+import {compareCompleteQuran,VERSE_COUNTS} from './compare-complete-quran.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
@@ -185,4 +186,10 @@ test('exact Quran reference comparison rejects even a single changed diacritic',
  assert.equal(validateReferenceProvenance(metadata),true);
  delete metadata.license;
  assert.throws(()=>validateReferenceProvenance(metadata),/Missing reference provenance/);
+});
+
+test('complete Quran comparator requires exactly 114 surahs and 6236 verses',()=>{
+ assert.equal(VERSE_COUNTS.length,114);
+ assert.equal(VERSE_COUNTS.reduce((a,b)=>a+b,0),6236);
+ assert.throws(()=>compareCompleteQuran('/no-reviewed-quran-reference','/no-quran-candidate'),/ENOENT/);
 });
