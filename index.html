@@ -24,7 +24,7 @@ const prayerNotifyToggle=document.createElement('input');prayerNotifyToggle.type
 const prayerNotifyInfo=document.createElement('p');prayerNotifyInfo.className='muted';prayerNotifyInfo.textContent='Напоминания работают только в открытом приложении. Для фоновых уведомлений потребуется отдельная поддержка.';
 prayerRows.before(prayerNotifyLabel,prayerNotifyInfo);
 prayerNotifyToggle.addEventListener('change',()=>{try{localStorage.setItem('asiya-prayer-foreground-alerts',prayerNotifyToggle.checked?'yes':'no');}catch{}});
-let prayerLastAlert='';
+let prayerLastAlert='',prayerAutoRefreshDate='';
 const prayerCountdown=document.createElement('p');prayerCountdown.className='notice';prayerCountdown.setAttribute('role','status');prayerCountdown.setAttribute('aria-live','off');prayerCountdown.hidden=true;prayerRows.before(prayerCountdown);
 function startPrayerCountdown(timings,timezone,dateGregorian){
  if(prayerClockTimer)clearInterval(prayerClockTimer);
@@ -33,7 +33,7 @@ function startPrayerCountdown(timings,timezone,dateGregorian){
   try{
    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
    const today=parts.day+'-'+parts.month+'-'+parts.year;
-   if(today!==dateGregorian){prayerCountdown.textContent='Расписание за '+dateGregorian+'. Обновите время намазов для текущего дня.';return;}
+   if(today!==dateGregorian){prayerCountdown.textContent='Расписание за '+dateGregorian+'. Получаем время на новый день…';if(prayerAutoRefreshDate!==today&&navigator.onLine!==false){prayerAutoRefreshDate=today;prayerForm.requestSubmit();}return;}
    const now=Number(parts.hour)*3600+Number(parts.minute)*60+Number(parts.second);
    if(prayerNotifyToggle.checked){for(const [key,label] of active){const m=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);if(!m)continue;const target=Number(m[1])*3600+Number(m[2])*60;const alertKey=today+':'+timezone+':'+key;if(now>=target&&now<target+60&&prayerLastAlert!==alertKey){prayerLastAlert=alertKey;prayerNotifyInfo.textContent='Наступило время намаза: '+label+'.';if('vibrate'in navigator)navigator.vibrate(200);break;}}}
    const next=active.map(([key,label])=>{const match=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);return match?{label,at:Number(match[1])*3600+Number(match[2])*60}:null;}).find(item=>item&&item.at>now);
@@ -62,7 +62,7 @@ prayerForm.addEventListener('submit',async event=>{
   const frag=document.createDocumentFragment();
   for(const [key,label] of prayerKeys){const row=document.createElement('div');row.className='feature';const name=document.createElement('strong');name.textContent=label;const time=document.createElement('span');time.className='muted';time.textContent=timings[key].match(/\d{1,2}:\d{2}/)[0];row.append(name,time);frag.append(row);}
   prayerRows.replaceChildren(frag);
-  if(/^\d{2}-\d{2}-\d{4}$/.test(data.date.gregorian?.date||''))startPrayerCountdown(timings,data.meta.timezone,data.date.gregorian.date);
+  if(/^\d{2}-\d{2}-\d{4}$/.test(data.date.gregorian?.date||'')){prayerAutoRefreshDate='';startPrayerCountdown(timings,data.meta.timezone,data.date.gregorian.date);}
   prayerInfo.textContent='Расписание: '+city+', '+country+' · '+data.date.readable+' · часовой пояс '+data.meta.timezone+'. Время предоставлено AlAdhan; проверьте соответствие местной мечети.';
   try{localStorage.setItem('asiya-prayer-location',JSON.stringify({city,country,method}));}catch{}
  }catch(error){if(controller.signal.aborted)return;prayerInfo.textContent=navigator.onLine===false?'Нет подключения к интернету.':'Не удалось получить проверенное расписание. Проверьте название города и страны или попробуйте позже.';}
