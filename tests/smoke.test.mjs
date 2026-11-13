@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {compareExactQuranText,validateReferenceProvenance} from './compare-quran-reference.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
@@ -167,4 +168,19 @@ test('Quran cache validator rejects altered verse counts, numbering and surah id
  const excessiveText=good();excessiveText.data.ayahs[0].text='ب'.repeat(20001);assert.equal(await validate(makeResponse(excessiveText),url),false);
  const wrongEditionUrl=new URL('https://api.alquran.cloud/v1/surah/1/ru.kuliev');
  assert.equal(await validate(makeResponse(nonArabic),wrongEditionUrl),true);
+});
+
+test('exact Quran reference comparison rejects even a single changed diacritic',()=>{
+ const reference={edition:'quran-uthmani',ayahs:[{numberInSurah:1,text:'بِسْمِ اللَّهِ'},{numberInSurah:2,text:'الْحَمْدُ'}]};
+ const candidate=structuredClone(reference);
+ assert.deepEqual(compareExactQuranText(reference,candidate),{matched:2});
+ candidate.ayahs[0].text='بَسْمِ اللَّهِ';
+ assert.throws(()=>compareExactQuranText(reference,candidate),/Exact Quran text mismatch/);
+ candidate.ayahs[0].text=reference.ayahs[0].text;
+ candidate.ayahs.reverse();
+ assert.throws(()=>compareExactQuranText(reference,candidate),/Verse order mismatch/);
+ const metadata={sourceName:'Example only',sourceUrl:'https://example.org',edition:'quran-uthmani',license:'Example',reviewedBy:'Test',reviewedAt:'2026-11-13',sha256:'a'.repeat(64)};
+ assert.equal(validateReferenceProvenance(metadata),true);
+ delete metadata.license;
+ assert.throws(()=>validateReferenceProvenance(metadata),/Missing reference provenance/);
 });
