@@ -230,3 +230,15 @@ test('deleted offline surahs cannot be restored by legacy cache migration',()=>{
 });
 
 test('live Quran audit module exists and requires exact text comparison',()=>{ const source=readFileSync(new URL('../tools/audit-live-quran.mjs',import.meta.url),'utf8');assert.ok(source.includes('if(a!==b)'));assert.ok(source.includes("status:'error'"));assert.ok(source.includes('scholarlyCertified:false'));assert.ok(source.includes('referenceSha256:'));});
+
+test('Tanzil 1.1 source is pinned but not silently activated',()=>{
+ const m=JSON.parse(readFileSync(new URL('../quran-sources/tanzil-uthmani-1.1.json',import.meta.url),'utf8'));
+ assert.equal(m.id,'tanzil-uthmani-1.1');
+ assert.equal(m.sha256,'4b91f9e6e8ac645d039e4ed85b3be492e795232a31cd22d668ac58238722e26f');
+ assert.equal(m.bytes,1384612);
+ assert.equal(m.ayahs,6236);
+ assert.equal(m.publicationStatus,'source file not bundled; not used by production reader');
+ const verifier=readFileSync(new URL('../tools/verify-pinned-tanzil.mjs',import.meta.url),'utf8');
+ assert.match(verifier,/SHA-256 mismatch: refusing source/);
+ assert.match(verifier,/parseTanzilText\(bytes\)/);
+});
