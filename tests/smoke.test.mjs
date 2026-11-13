@@ -113,3 +113,15 @@ test('manual Quran downloads survive automatic cache eviction and app upgrades',
  assert.ok(sw.includes('const QURAN_CACHE_LIMIT=18'),'Automatic cache remains bounded');
  assert.ok(html.includes("caches.open('asiya-quran-offline-v1')"));
 });
+
+test('legacy Quran cache migration verifies full surahs before copying',()=>{
+ assert.ok(html.includes('async function migrateLegacyQuranCache()'));
+ assert.ok(html.includes("caches.open('asiya-quran-v1')"));
+ assert.ok(html.includes("caches.open('asiya-quran-offline-v1')"));
+ assert.ok(html.includes('if(!editions.every(edition=>parts.has(edition)))continue'));
+ assert.ok(html.includes('await validOfflineQuranResponse(response,num)'));
+ assert.ok(html.includes('await destination.put(item.request,item.response.clone())'));
+ assert.ok(html.includes('await validOfflineQuranResponse(saved,num)'));
+ assert.ok(html.includes('await ensureLegacyQuranMigration()'));
+ assert.ok(!html.includes('Офлайн-кеш ограничен 18 частями.'));
+});
