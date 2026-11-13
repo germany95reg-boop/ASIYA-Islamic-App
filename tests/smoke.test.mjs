@@ -30,7 +30,7 @@ test('service worker JavaScript parses and supports navigation refresh',()=>{
 
 test('Quran word mode preserves the verse text and does not invent translations',()=>{
  assert.match(html,/p\.textContent=ayah\.text/);
- assert.match(html,/const tokens=ayah\.text\.trim\(\)\.split\(\/\\s\+\/u\)/);
+ assert.ok(html.includes(String.raw`const tokens=ayah.text.trim().split(/\s+/u)`));
  assert.match(html,/reconstructed!==normalizedOriginal/);
  assert.match(html,/перевод и чтение ожидают проверки/);
 });
