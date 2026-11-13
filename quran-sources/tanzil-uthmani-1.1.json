@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "tanzil-uthmani-1.1",
+  "edition": "quran-uthmani",
+  "source": "Tanzil Project",
+  "sourceUrl": "https://tanzil.net/download/",
+  "version": "1.1",
+  "referenceFile": "quran-uthmani.txt",
+  "sha256": "4b91f9e6e8ac645d039e4ed85b3be492e795232a31cd22d668ac58238722e26f",
+  "bytes": 1384612,
+  "surahs": 114,
+  "ayahs": 6236,
+  "license": "CC BY 3.0; preserve Tanzil copyright notice and attribution",
+  "verifiedScope": "structural counts and SHA-256 of user-supplied file; not scholarly certification",
+  "publicationStatus": "source file not bundled; not used by production reader"
+}
