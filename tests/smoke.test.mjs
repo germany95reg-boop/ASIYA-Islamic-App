@@ -251,3 +251,14 @@ test('Tanzil offline asset builder refuses overwrite and verifies before writing
  assert.match(source,/sourceSha256:manifest\.sha256/);
  assert.match(source,/publication and license review required/);
 });
+
+test('main reader supports opt-in pinned Tanzil without changing translations or persistence',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/let pinnedTanzilAyahs=null/);
+ assert.match(html,/crypto\.subtle\.digest\('SHA-256',bytes\)/);
+ assert.match(html,/hash!=='4b91f9e6e8ac645d039e4ed85b3be492e795232a31cd22d668ac58238722e26f'/);
+ assert.match(html,/if\(edition==='quran-uthmani'&&pinnedTanzilAyahs\)/);
+ assert.match(html,/const editions=\['quran-uthmani','ru.kuliev','en.transliteration'\]/);
+ assert.match(html,/reset\.onclick=\(\)=>\{pinnedTanzilAyahs=null/);
+ assert.match(html,/Источник: Tanzil 1\.1/);
+});
