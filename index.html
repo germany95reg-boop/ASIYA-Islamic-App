@@ -252,6 +252,46 @@ async function validOfflineQuranResponse(response,num){
   return payload.code===200&&Number(payload.data?.number)===num&&ayahs?.length===QURAN_VERSE_COUNTS[num-1]&&Number.isInteger(payload.data?.numberOfAyahs)&&payload.data.numberOfAyahs===ayahs?.length&&Array.isArray(ayahs)&&ayahs.length>0&&ayahs.every((ayah,i)=>Number.isInteger(ayah.numberInSurah)&&ayah.numberInSurah===i+1&&typeof ayah.text==='string'&&ayah.text.trim().length>0);
  }catch{return false}
 }
+async function migrateLegacyQuranCache(){
+ if(!('caches' in window))return {migrated:0};
+ const old=await caches.open('asiya-quran-v1');
+ const destination=await caches.open('asiya-quran-offline-v1');
+ const requests=await old.keys(),bySurah=new Map();
+ for(const request of requests){
+  const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
+  if(!match)continue;
+  const num=Number(match[1]);
+  if(num<1||num>114)continue;
+  const response=await old.match(request);
+  if(!(await validOfflineQuranResponse(response,num)))continue;
+  if(!bySurah.has(num))bySurah.set(num,new Map());
+  bySurah.get(num).set(match[2],{request,response});
+ }
+ let migrated=0;
+ for(const [num,parts] of bySurah){
+  const editions=['quran-uthmani','ru.kuliev','en.transliteration'];
+  if(!editions.every(edition=>parts.has(edition)))continue;
+  const toWrite=[];
+  for(const edition of editions){
+   const {request,response}=parts.get(edition);
+   const existing=await destination.match(request);
+   if(existing&&await validOfflineQuranResponse(existing,num))continue;
+   toWrite.push({request,response});
+  }
+  for(const item of toWrite){
+   await destination.put(item.request,item.response.clone());
+   const saved=await destination.match(item.request);
+   if(!(await validOfflineQuranResponse(saved,num))){await destination.delete(item.request);throw Error('Не удалось проверить перенесённую суру '+num);}
+   migrated++;
+  }
+ }
+ return {migrated};
+}
+let legacyQuranMigration=null;
+function ensureLegacyQuranMigration(){
+ if(!legacyQuranMigration)legacyQuranMigration=migrateLegacyQuranCache().catch(error=>{legacyQuranMigration=null;console.warn('ASIYA: offline Quran migration failed',error);return {migrated:0,error:true};});
+ return legacyQuranMigration;
+}
 let offlineCardsAbort=null;let offlineScanRunning=false,offlineLibraryFilter='all',offlineLibraryQuery='',offlineLibrarySort='number';try{const prefs=JSON.parse(localStorage.getItem('asiya-offline-library-prefs')||'{}');if(['all','complete','incomplete'].includes(prefs.filter))offlineLibraryFilter=prefs.filter;if(['number','number-desc','name'].includes(prefs.sort))offlineLibrarySort=prefs.sort;}catch(error){}const saveOfflineLibraryPrefs=()=>{try{localStorage.setItem('asiya-offline-library-prefs',JSON.stringify({filter:offlineLibraryFilter,sort:offlineLibrarySort}));}catch(error){}};
 async function refreshOfflineSurahs(){
  if(offlineScanRunning)return;
@@ -260,6 +300,7 @@ async function refreshOfflineSurahs(){
  const info=document.createElement('p');info.className='muted';info.textContent='Проверяем сохранённые суры…';offlineList.append(info);
  if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';offlineScanRunning=false;return;}
  try{
+  await ensureLegacyQuranMigration();
   const cache=await caches.open('asiya-quran-offline-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
   for(const request of requests){
    const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
@@ -269,7 +310,7 @@ async function refreshOfflineSurahs(){
   offlineList.replaceChildren();
   const heading=document.createElement('p');heading.className='muted';
   const ready=[...bySurah];
-  const complete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>parts.has(edition))).length;heading.textContent=ready.length?'Сохранено сур: '+ready.length+' · полностью: '+complete+' · требуется дозагрузка: '+(ready.length-complete)+'. Офлайн-кеш ограничен 18 частями.':'Пока нет сохранённых сур. Откройте суру с интернетом или скачайте её выше.';
+  const complete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>parts.has(edition))).length;heading.textContent=ready.length?'Сохранено сур: '+ready.length+' · полностью: '+complete+' · требуется дозагрузка: '+(ready.length-complete)+'. Скачанные суры хранятся отдельно от временного кеша.':'Пока нет сохранённых сур. Откройте суру с интернетом или скачайте её выше.';
   offlineList.append(heading);
   const report=document.createElement('p');report.className='muted';report.setAttribute('role','status');
   const incomplete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].some(edition=>!parts.has(edition)));
@@ -374,6 +415,7 @@ offlineDownloadButton.onclick=async()=>{
  notifyOfflineProgress(0,0);
  offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');
  try{
+  await ensureLegacyQuranMigration();
   const cache=await caches.open('asiya-quran-offline-v1');
   const editions=['quran-uthmani','ru.kuliev','en.transliteration'];
   const missing=[];
