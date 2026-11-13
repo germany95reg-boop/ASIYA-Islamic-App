@@ -254,6 +254,7 @@ async function validOfflineQuranResponse(response,num){
 }
 async function migrateLegacyQuranCache(){
  if(!('caches' in window))return {migrated:0};
+ try{if(localStorage.getItem('asiya-quran-legacy-migration-v1')==='complete')return {migrated:0};}catch(error){}
  const old=await caches.open('asiya-quran-v1');
  const destination=await caches.open('asiya-quran-offline-v1');
  const requests=await old.keys(),bySurah=new Map();
@@ -285,6 +286,7 @@ async function migrateLegacyQuranCache(){
    migrated++;
   }
  }
+ try{localStorage.setItem('asiya-quran-legacy-migration-v1','complete');}catch(error){console.warn('ASIYA: migration marker unavailable',error)}
  return {migrated};
 }
 let legacyQuranMigration=null;
@@ -341,7 +343,7 @@ async function refreshOfflineSurahs(){
   offlineList.append(storage);
   if(validRequests.length){
    const clear=document.createElement('button');clear.type='button';clear.className='secondary';clear.textContent='Очистить все офлайн-суры';
-   clear.onclick=async()=>{if(!window.confirm('Удалить все сохранённые офлайн-суры? Избранное и прогресс чтения сохранятся.'))return;clear.disabled=true;try{for(const request of await cache.keys())await cache.delete(request);quranEditionCache.clear();await refreshOfflineSurahs()}catch(error){clear.disabled=false;clear.textContent='Не удалось очистить · Повторить'}};
+   clear.onclick=async()=>{if(!window.confirm('Удалить все сохранённые офлайн-суры? Избранное и прогресс чтения сохранятся.'))return;clear.disabled=true;try{for(const request of await cache.keys())await cache.delete(request);const legacy=await caches.open('asiya-quran-v1');for(const request of await legacy.keys())await legacy.delete(request);quranEditionCache.clear();await refreshOfflineSurahs()}catch(error){clear.disabled=false;clear.textContent='Не удалось очистить · Повторить'}};
    offlineList.append(clear);
   }
   const preferencesRow=document.createElement('div');preferencesRow.className='reader-tools';
@@ -401,7 +403,7 @@ async function refreshOfflineSurahs(){
    let surahBytes=0;
    for(const url of editionUrls){const response=await cache.match(url);if(response){try{surahBytes+=(await response.clone().arrayBuffer()).byteLength}catch(error){console.warn('ASIYA: size unavailable for surah '+num,error)}}}
    const surahSize=document.createElement('span');surahSize.className='muted';surahSize.textContent=' · ≈ '+(surahBytes/1024).toFixed(1)+' КБ';row.append(surahSize);
-   const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Удалить офлайн';remove.setAttribute('aria-label','Удалить офлайн-копию суры '+num);remove.onclick=async()=>{if(!window.confirm('Удалить офлайн-копию «'+names[num-1]+'» (≈ '+(surahBytes/1024).toFixed(1)+' КБ)? Избранное и отметки чтения сохранятся.'))return;remove.disabled=true;remove.textContent='Удаляем…';try{const editionsToRemove=['quran-uthmani','ru.kuliev','en.transliteration'];await Promise.all(editionsToRemove.map(async edition=>{const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;await cache.delete(url);quranEditionCache.delete(num+':'+edition)}));await refreshOfflineSurahs()}catch(error){remove.disabled=false;remove.textContent='Повторить удаление'}};if(!editions.has('quran-uthmani')||!editions.has('ru.kuliev')||!editions.has('en.transliteration')){
+   const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Удалить офлайн';remove.setAttribute('aria-label','Удалить офлайн-копию суры '+num);remove.onclick=async()=>{if(!window.confirm('Удалить офлайн-копию «'+names[num-1]+'» (≈ '+(surahBytes/1024).toFixed(1)+' КБ)? Избранное и отметки чтения сохранятся.'))return;remove.disabled=true;remove.textContent='Удаляем…';try{const editionsToRemove=['quran-uthmani','ru.kuliev','en.transliteration'];await Promise.all(editionsToRemove.map(async edition=>{const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;await cache.delete(url);const legacy=await caches.open('asiya-quran-v1');await legacy.delete(url);quranEditionCache.delete(num+':'+edition)}));await refreshOfflineSurahs()}catch(error){remove.disabled=false;remove.textContent='Повторить удаление'}};if(!editions.has('quran-uthmani')||!editions.has('ru.kuliev')||!editions.has('en.transliteration')){
     const repair=document.createElement('button');repair.type='button';repair.className='secondary';repair.textContent='Дозагрузить части';
     repair.onclick=()=>{if(offlineDownloadButton.disabled)return;offlineSurahSelect.value=String(num);offlineDownloadButton.click();};
     const syncRepair=event=>{if(event.detail.num!==num)return;if(event.detail.total===0){repair.disabled=true;repair.textContent='Загружается…';}else if(event.detail.done<0){repair.disabled=false;repair.textContent='Дозагрузить части';}};
