@@ -170,8 +170,9 @@ offlineDownloadButton.onclick=async()=>{
   const editions=['quran-uthmani','ru.kuliev','en.transliteration'];
   const missing=[];
   for(const edition of editions){
+   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
    const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
-   const stored=await cache.match(url);if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
+   const stored=await cache.match(url);if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
   }
   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
   offlineDownloadProgress.max=Math.max(1,missing.length);
