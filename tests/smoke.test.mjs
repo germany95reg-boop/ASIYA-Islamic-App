@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {compareExactQuranText,validateReferenceProvenance} from './compare-quran-reference.mjs';
 import {compareCompleteQuran,VERSE_COUNTS} from './compare-complete-quran.mjs';
 import {validateCandidatePayload} from '../tools/export-quran-candidate.mjs';
+import {parseTanzilText} from '../tools/parse-tanzil-text.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
@@ -204,4 +205,11 @@ test('API candidate export keeps Arabic text unmodified and rejects corrupted su
  assert.throws(()=>validateCandidatePayload(payload,2),/Invalid API candidate/);
  const corrupted=structuredClone(payload);corrupted.data.ayahs[0].text='plain text';
  assert.throws(()=>validateCandidatePayload(corrupted,1),/Invalid API candidate/);
+});
+
+test('Tanzil parser rejects missing, duplicate and malformed Quran verses',()=>{
+ assert.throws(()=>parseTanzilText(Buffer.from('1|1|بِسْمِ اللَّهِ\n','utf8')),/Missing verses/);
+ assert.throws(()=>parseTanzilText(Buffer.from('1|1|بِسْمِ اللَّهِ\n1|1|بِسْمِ اللَّهِ\n','utf8')),/Duplicate verse/);
+ assert.throws(()=>parseTanzilText(Buffer.from('1|1|not Arabic\n','utf8')),/Missing Arabic/);
+ assert.throws(()=>parseTanzilText(Buffer.from('invalid row\n','utf8')),/Unexpected Tanzil row format/);
 });
