@@ -150,10 +150,11 @@ const offlineDownloadButton=document.getElementById('offline-download-current'),
 for(let i=0;i<names.length;i++){const option=document.createElement('option');option.value=String(i+1);option.textContent=(i+1)+'. '+names[i]+' — '+surahMeanings[i];offlineSurahSelect.append(option)}
 const offlineDownloadProgress=document.getElementById('offline-download-progress');
 let offlineDownloadController=null;
-const offlineCancelButton=document.createElement('button');offlineCancelButton.type='button';offlineCancelButton.className='secondary';offlineCancelButton.textContent='Отменить загрузку';offlineCancelButton.hidden=true;
+const offlineCancelButton=document.createElement('button');offlineCancelButton.type='button';offlineCancelButton.className='secondary';offlineCancelButton.textContent='Отменить загрузку';offlineCancelButton.hidden=true;offlineCancelButton.setAttribute('aria-controls','offline-download-progress');
 offlineDownloadProgress.insertAdjacentElement('afterend',offlineCancelButton);
 offlineCancelButton.onclick=()=>{if(offlineDownloadController&&!offlineDownloadController.signal.aborted){offlineCancelButton.disabled=true;offlineCancelButton.textContent='Отменяем…';offlineDownloadStatus.textContent='Отменяем загрузку… Уже сохранённые части останутся доступны.';offlineDownloadController.abort();}};
 offlineDownloadButton.onclick=async()=>{
+ if(offlineDownloadController)return;
  if(!('caches' in window)){offlineDownloadStatus.textContent='Офлайн-хранилище недоступно';return;}
  const num=Number(offlineSurahSelect.value);
  if(!Number.isInteger(num)||num<1||num>114)return;
