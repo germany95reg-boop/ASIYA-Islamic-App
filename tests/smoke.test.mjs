@@ -40,3 +40,11 @@ test('word source registry is not published without review',()=>{
  assert.ok(Array.isArray(registry.entries));
  assert.equal(registry.entries.length,0);
 });
+
+test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
+ for(const edition of ['quran-uthmani','ru.kuliev','en.transliteration'])assert.ok(html.includes("'"+edition+"'"));
+ assert.ok(html.includes('asiya-run-diagnostics'));
+ assert.ok(html.includes('asiya-copy-diagnostics'));
+ assert.ok(html.includes('asiya-diagnostics-copy-fallback'));
+ assert.ok(html.includes('fallback.select()'));
+});
