@@ -23,6 +23,12 @@ const prayerNotifyLabel=document.createElement('label');prayerNotifyLabel.style.
 const prayerNotifyToggle=document.createElement('input');prayerNotifyToggle.type='checkbox';prayerNotifyToggle.checked=localStorage.getItem('asiya-prayer-foreground-alerts')==='yes';prayerNotifyLabel.append(prayerNotifyToggle,document.createTextNode('Напоминать о намазе, пока ASIYA открыта'));
 const prayerNotifyInfo=document.createElement('p');prayerNotifyInfo.className='muted';prayerNotifyInfo.textContent='Напоминания работают только в открытом приложении. Для фоновых уведомлений потребуется отдельная поддержка.';
 prayerRows.before(prayerNotifyLabel,prayerNotifyInfo);
+const prayerSystemButton=document.createElement('button');prayerSystemButton.type='button';prayerSystemButton.className='secondary';prayerSystemButton.textContent='Разрешить системные уведомления';
+prayerNotifyInfo.after(prayerSystemButton);
+const prayerNotificationSupported='Notification'in window&&window.isSecureContext;
+function updatePrayerNotificationButton(){if(!prayerNotificationSupported){prayerSystemButton.disabled=true;prayerSystemButton.textContent='Уведомления не поддерживаются';return;}prayerSystemButton.disabled=Notification.permission==='granted';prayerSystemButton.textContent=Notification.permission==='granted'?'✓ Системные уведомления разрешены':Notification.permission==='denied'?'Уведомления запрещены в настройках браузера':'Разрешить системные уведомления';}
+prayerSystemButton.onclick=async()=>{if(!prayerNotificationSupported||Notification.permission==='denied')return;try{await Notification.requestPermission();updatePrayerNotificationButton();}catch{prayerNotifyInfo.textContent='Не удалось запросить разрешение на уведомления.';}};
+updatePrayerNotificationButton();
 prayerNotifyToggle.addEventListener('change',()=>{try{localStorage.setItem('asiya-prayer-foreground-alerts',prayerNotifyToggle.checked?'yes':'no');}catch{}});
 let prayerLastAlert='',prayerAutoRefreshDate='';
 const prayerCountdown=document.createElement('p');prayerCountdown.className='notice';prayerCountdown.setAttribute('role','status');prayerCountdown.setAttribute('aria-live','off');prayerCountdown.hidden=true;prayerRows.before(prayerCountdown);
@@ -35,7 +41,9 @@ function startPrayerCountdown(timings,timezone,dateGregorian){
    const today=parts.day+'-'+parts.month+'-'+parts.year;
    if(today!==dateGregorian){prayerCountdown.textContent='Расписание за '+dateGregorian+'. Получаем время на новый день…';if(prayerAutoRefreshDate!==today&&navigator.onLine!==false){prayerAutoRefreshDate=today;prayerForm.requestSubmit();}return;}
    const now=Number(parts.hour)*3600+Number(parts.minute)*60+Number(parts.second);
-   if(prayerNotifyToggle.checked){for(const [key,label] of active){const m=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);if(!m)continue;const target=Number(m[1])*3600+Number(m[2])*60;const alertKey=today+':'+timezone+':'+key;if(now>=target&&now<target+60&&prayerLastAlert!==alertKey){prayerLastAlert=alertKey;prayerNotifyInfo.textContent='Наступило время намаза: '+label+'.';if('vibrate'in navigator)navigator.vibrate(200);break;}}}
+   if(prayerNotifyToggle.checked){for(const [key,label] of active){const m=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);if(!m)continue;const target=Number(m[1])*3600+Number(m[2])*60;const alertKey=today+':'+timezone+':'+key;if(now>=target&&now<target+60&&prayerLastAlert!==alertKey){prayerLastAlert=alertKey;prayerNotifyInfo.textContent='Наступило время намаза: '+label+'.';if('vibrate'in navigator)navigator.vibrate(200);
+    if(prayerNotificationSupported&&Notification.permission==='granted'){try{new Notification('ASIYA · Время намаза',{body:'Наступило время молитвы: '+label,tag:'asiya-prayer-'+alertKey,icon:'./icon-192.png'});}catch{}}
+    break;}}}
    const next=active.map(([key,label])=>{const match=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);return match?{label,at:Number(match[1])*3600+Number(match[2])*60}:null;}).find(item=>item&&item.at>now);
    if(!next){prayerCountdown.textContent='Все намазы на сегодня прошли. Обновите расписание завтра.';return;}
    const left=next.at-now,h=Math.floor(left/3600),m=Math.floor(left%3600/60),sec=left%60;
