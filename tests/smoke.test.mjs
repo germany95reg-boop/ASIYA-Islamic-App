@@ -242,3 +242,12 @@ test('Tanzil 1.1 source is pinned but not silently activated',()=>{
  assert.match(verifier,/SHA-256 mismatch: refusing source/);
  assert.match(verifier,/parseTanzilText\(bytes\)/);
 });
+
+test('Tanzil offline asset builder refuses overwrite and verifies before writing',()=>{
+ const source=readFileSync(new URL('../tools/build-pinned-tanzil.mjs',import.meta.url),'utf8');
+ assert.match(source,/verifyPinnedTanzil\(bytes,manifest\)/);
+ assert.match(source,/if\(existsSync\(dir\)\)throw Error/);
+ assert.match(source,/mkdirSync\(dir,\{recursive:false\}\)/);
+ assert.match(source,/sourceSha256:manifest\.sha256/);
+ assert.match(source,/publication and license review required/);
+});
