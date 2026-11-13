@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {createHash} from 'node:crypto';
 
 export function compareExactQuranText(reference, candidate) {
  assert.ok(reference && candidate && typeof reference === 'object' && typeof candidate === 'object');
@@ -31,8 +32,10 @@ if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href)
  const args=process.argv.slice(2);
  if(args.length!==3){console.error('Usage: node tests/compare-quran-reference.mjs <reviewed-reference.json> <candidate.json> <provenance.json>');process.exitCode=2;}
  else{
+  const referenceBytes=fs.readFileSync(args[0]);
   const [ref,candidate,provenance]=args.map(path=>JSON.parse(fs.readFileSync(path,'utf8')));
   validateReferenceProvenance(provenance);
+  assert.equal(createHash('sha256').update(referenceBytes).digest('hex'),provenance.sha256.toLowerCase(),'Reference file SHA-256 does not match provenance');
   const result=compareExactQuranText(ref,candidate);
   console.log('Exact code-point comparison passed for '+result.matched+' verses. This is not scholarly certification.');
  }
