@@ -54,7 +54,8 @@ test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
 });
 
 test('Quran API refreshes online before using offline fallback',()=>{
- assert.ok(sw.includes('response=await fetch(request)'));\n assert.ok(sw.includes('if(saved&&await validQuranCacheResponse(saved,url))return saved'));
+ assert.ok(sw.includes('response=await fetch(request)'));
+ assert.ok(sw.includes('if(saved&&await validQuranCacheResponse(saved,url))return saved'));
  assert.match(sw,/response\.ok&&response\.type!=='opaque'/);
  assert.match(sw,/payload\.code===200/);
  assert.match(sw,/QURAN_CACHE_LIMIT=18/);
@@ -80,7 +81,7 @@ test('Quran responses must contain the full declared number of verses',()=>{
  assert.ok(html.includes("json.data.numberOfAyahs!==json.data?.ayahs?.length"),'Reader must reject incomplete surah');
  assert.ok(html.includes("payload.data.numberOfAyahs===ayahs?.length"),'Offline library must reject incomplete surah');
  assert.ok(html.includes("Number(payload.data?.numberOfAyahs)!==7"),'Al-Fatiha diagnostics must check verse count');
- assert.ok(sw.includes("payload.data.numberOfAyahs===payload.data?.ayahs?.length"),'Service worker must not cache incomplete surah');
+ assert.ok(sw.includes('payload.data.numberOfAyahs===ayahs.length'),'Service worker must not cache incomplete surah');
 });
 
 test('independent 114-surah Kufan/Hafs verse counts are consistent across app and service worker',()=>{
@@ -96,7 +97,7 @@ test('independent 114-surah Kufan/Hafs verse counts are consistent across app an
  assert.equal(counts[113],6);
  assert.ok(html.includes('json.data?.ayahs?.length!==QURAN_VERSE_COUNTS[num-1]'));
  assert.ok(html.includes('ayahs?.length===QURAN_VERSE_COUNTS[num-1]'));
- assert.ok(sw.includes('payload.data.ayahs.length===QURAN_VERSE_COUNTS['));
+ assert.ok(sw.includes('ayahs.length===QURAN_VERSE_COUNTS['));
 });
 
 test('corrupted Quran cache is rejected before offline fallback',()=>{
