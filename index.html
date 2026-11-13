@@ -183,7 +183,7 @@ offlineDownloadButton.onclick=async()=>{
    offlineDownloadProgress.value=3;
    offlineDownloadStatus.textContent='✓ Сура '+num+' уже полностью сохранена';
   }else{
-   offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из '+missing.length+' недостающих частей…';
+   offlineDownloadStatus.textContent='Сура '+num+': сохранено '+(3-missing.length)+' из 3 частей. Осталось скачать: '+missing.length+'.';
    for(const [part,edition] of missing.entries()){
     if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
     const url='https://api.alquran.cloud/v1/surah/'+num+'/'+edition;
@@ -203,7 +203,7 @@ offlineDownloadButton.onclick=async()=>{
     offlineDownloadProgress.value=3-missing.length+part+1;
     offlineDownloadProgress.setAttribute('aria-label','Загрузка суры '+num+': '+offlineDownloadProgress.value+' из 3 частей');
     notifyOfflineProgress(offlineDownloadProgress.value,3);
-    offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
+    offlineDownloadStatus.textContent='Сура '+num+': сохранено '+offlineDownloadProgress.value+' из 3 частей. Осталось скачать: '+(missing.length-part-1)+'.';
    }
    if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
    const keys=await cache.keys();
