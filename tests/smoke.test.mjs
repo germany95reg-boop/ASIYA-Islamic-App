@@ -132,3 +132,11 @@ test('offline library reports measured download size and estimated browser quota
  assert.ok(html.includes("remaining<10*1024*1024"));
  assert.ok(html.includes("квота браузера не равна свободному месту телефона"));
 });
+
+test('manual Quran downloads are never automatically evicted at 18 cache parts',()=>{
+ assert.ok(!html.includes('let evictedSurahs=0'));
+ assert.ok(!html.includes('if(keys.length>18)'));
+ assert.ok(html.includes('Ранее скачанные суры сохранены.'));
+ assert.ok(html.includes("error?.name==='QuotaExceededError'"));
+ assert.ok(html.includes('Очистить все офлайн-суры'));
+});
