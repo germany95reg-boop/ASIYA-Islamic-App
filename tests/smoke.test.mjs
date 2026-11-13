@@ -264,3 +264,12 @@ test('main reader auto-detects pinned Tanzil with safe API fallback',()=>{
  assert.doesNotMatch(html,/function installPinnedTanzilControl/);
  assert.match(html,/AlQuran Cloud \(резервный источник\)/);
 });
+
+test('service worker caches optional Tanzil asset without bypassing reader SHA verification',()=>{
+ const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(sw,/const TANZIL_ASSET='quran-sources\/tanzil-uthmani-1\.1\.txt'/);
+ assert.match(sw,/bytes\.byteLength===1384612/);
+ assert.match(html,/hash!==PINNED_TANZIL_SHA256/);
+ assert.doesNotMatch(html,/function installPinnedTanzilControl/);
+});
