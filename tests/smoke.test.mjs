@@ -55,3 +55,11 @@ test('Quran API refreshes online before using offline fallback',()=>{
  assert.match(sw,/payload\.code===200/);
  assert.match(sw,/QURAN_CACHE_LIMIT=18/);
 });
+
+test('offline Quran library and service worker use the same cache',()=>{
+ const cacheName=sw.match(/const QURAN_CACHE='([^']+)'/)?.[1];
+ assert.ok(cacheName,'Service worker Quran cache missing');
+ assert.ok(html.includes("caches.open('"+cacheName+"')"),'Offline library cache must match service worker');
+ assert.match(html,/sameQuranVerseIndex\(results\[0\]\.value,results\[i\]\.value\)/);
+ assert.match(html,/validateQuranEdition\(json\.data\?\.ayahs,edition\)/);
+});
