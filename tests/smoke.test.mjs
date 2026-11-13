@@ -171,7 +171,7 @@ test('Quran cache validator rejects altered verse counts, numbering and surah id
 });
 
 test('exact Quran reference comparison rejects even a single changed diacritic',()=>{
- const reference={edition:'quran-uthmani',ayahs:[{numberInSurah:1,text:'بِسْمِ اللَّهِ'},{numberInSurah:2,text:'الْحَمْدُ'}]};
+ const reference={edition:'quran-uthmani',surah:1,ayahs:[{numberInSurah:1,text:'بِسْمِ اللَّهِ'},{numberInSurah:2,text:'الْحَمْدُ'}]};
  const candidate=structuredClone(reference);
  assert.deepEqual(compareExactQuranText(reference,candidate),{matched:2});
  candidate.ayahs[0].text='بَسْمِ اللَّهِ';
@@ -179,6 +179,8 @@ test('exact Quran reference comparison rejects even a single changed diacritic',
  candidate.ayahs[0].text=reference.ayahs[0].text;
  candidate.ayahs.reverse();
  assert.throws(()=>compareExactQuranText(reference,candidate),/Verse order mismatch/);
+ candidate.ayahs.reverse();candidate.surah=2;
+ assert.throws(()=>compareExactQuranText(reference,candidate),/Surah identity mismatch/);
  const metadata={sourceName:'Example only',sourceUrl:'https://example.org',edition:'quran-uthmani',license:'Example',reviewedBy:'Test',reviewedAt:'2026-11-13',sha256:'a'.repeat(64)};
  assert.equal(validateReferenceProvenance(metadata),true);
  delete metadata.license;
