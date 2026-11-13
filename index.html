@@ -566,24 +566,38 @@ const asiyaDiagnosticButton=document.getElementById('asiya-run-diagnostics');
 const asiyaDiagnosticResults=document.getElementById('asiya-diagnostics-results');
 asiyaDiagnosticButton.addEventListener('click',async()=>{
  asiyaDiagnosticButton.disabled=true;
- asiyaDiagnosticResults.replaceChildren();
+ asiyaDiagnosticResults.textContent='Выполняется проверка. Обычно это занимает несколько секунд…';
  const checks=[];
  const check=(name,ok,detail)=>checks.push({name,ok,detail});
- check('Запуск интерфейса',Boolean(document.querySelector('#home')&&document.querySelector('#quran')), 'Основные разделы приложения');
- check('Подключение',navigator.onLine,'Состояние сети по данным браузера; не гарантирует доступ к API');
- check('Сохранение на устройстве',(()=>{try{const k='asiya-diag-temp';localStorage.setItem(k,'ok');const ok=localStorage.getItem(k)==='ok';localStorage.removeItem(k);return ok}catch{return false}})(),'Проверка временного ключа, без изменения пользовательских данных');
- check('Фоновая работа',Boolean(navigator.serviceWorker?.controller),'Управление страницей через Service Worker');
+ const testEdition=async(edition)=>{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),10000);
+  try{
+   const response=await fetch('https://api.alquran.cloud/v1/surah/1/'+edition,{cache:'no-store',signal:controller.signal});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const payload=await response.json();
+   const ayahs=payload?.data?.ayahs;
+   if(payload?.code!==200||!Array.isArray(ayahs)||ayahs.length!==7||!ayahs.every((a,i)=>a.numberInSurah===i+1&&typeof a.text==='string'&&a.text.trim()))throw Error('Некорректная структура аятов');
+   return {ok:true,ayahs};
+  }catch(e){return {ok:false,reason:e?.name==='AbortError'?'Превышено время ожидания':e?.message||'Ошибка сети'}}
+  finally{clearTimeout(timer)}
+ };
  try{
-  const response=await fetch('https://api.alquran.cloud/v1/surah/1/quran-uthmani',{cache:'no-store',signal:AbortSignal.timeout(9000)});
-  if(!response.ok)throw Error('HTTP '+response.status);
-  const payload=await response.json();
-  const ayahs=payload?.data?.ayahs;
-  const ok=payload?.code===200&&Array.isArray(ayahs)&&ayahs.length===7&&ayahs.every((a,i)=>a.numberInSurah===i+1&&typeof a.text==='string'&&a.text.trim().length>0);
-  check('Источник Корана',ok,ok?'Аль-Фатиха: получено 7 аятов, проверена структура ответа (не религиозная экспертиза)':'Неожиданная структура ответа');
- }catch(e){check('Источник Корана',false,'Не удалось загрузить Аль-Фатиху: '+(e?.name==='TimeoutError'?'превышено время ожидания':'проверьте соединение'))}
+  check('Запуск интерфейса',Boolean(document.querySelector('#home')&&document.querySelector('#quran')),'Основные разделы');
+  check('Подключение',navigator.onLine,'Состояние сети по данным браузера');
+  const storageOk=(()=>{const k='asiya-diag-'+Date.now();try{localStorage.setItem(k,'ok');return localStorage.getItem(k)==='ok'}catch{return false}finally{try{localStorage.removeItem(k)}catch{}}})();
+  check('Локальное сохранение',storageOk,'Временная запись без изменения настроек');
+  check('Офлайн-оболочка',Boolean(navigator.serviceWorker?.controller),'Страница управляется Service Worker; доступность конкретных сур офлайн не проверена');
+  const editions=[['Арабский текст','quran-uthmani'],['Русский перевод','ru.kuliev'],['Латинская транслитерация','en.transliteration']];
+  const results=await Promise.all(editions.map(async([name,id])=>({name,...await testEdition(id)})));
+  for(const result of results)check(result.name,result.ok,result.ok?'Аль-Фатиха: 7 аятов, проверена структура ответа':'Не удалось проверить: '+result.reason);
+  const count=results.filter(x=>x.ok).length;
+  check('Соответствие нумерации',count===3,count===3?'Все три источника вернули аяты 1–7; точность содержания не подтверждена':'Проверка неполная: не все источники доступны');
+ }catch(e){check('Диагностика',false,'Внутренняя ошибка проверки')}
  const list=document.createElement('ul');
  for(const item of checks){const li=document.createElement('li');li.textContent=(item.ok?'✓ ':'⚠ ')+item.name+' — '+item.detail;list.append(li)}
- asiyaDiagnosticResults.replaceChildren(list);
+ const summary=document.createElement('p');summary.textContent='Результат: '+checks.filter(x=>x.ok).length+' из '+checks.length+' проверок без предупреждений. Это техническая диагностика, не проверка правильности Корана или таджвида.';
+ asiyaDiagnosticResults.replaceChildren(summary,list);
  asiyaDiagnosticButton.disabled=false;
 });
 const asiyaUpdateButton=document.getElementById('asiya-check-update');
