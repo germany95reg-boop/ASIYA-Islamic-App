@@ -34,3 +34,6 @@
 ## Разработка
 
 Главная страница: `index.html`. PWA: `manifest.webmanifest`, `sw.js`. Политика проверки пословных материалов: `QURAN_WORD_REVIEW.md`, реестр: `quran-word-sources.json`.
+
+## Quran surah completeness reference
+The reader and service worker include a fixed 114-entry verse-count table for the standard Kufan/Hafs numbering (total **6,236** numbered ayahs). This table is checked independently of the numberOfAyahs metadata returned by the live API. Sources for the numbering convention and metadata: [Tanzil Quran Metadata](https://tanzil.net/docs/Quran_Metadata) and [Quran.ws numbering-system registry](https://quran.ws/docs/guidelines/reference/registries/). Different traditional verse-numbering systems exist; ASIYA currently uses Kufan/Hafs counts. This is a structural completeness check, **not** a certification of the exact Arabic letters, translation, or tajwid. The app must not silently substitute another numbering convention.
