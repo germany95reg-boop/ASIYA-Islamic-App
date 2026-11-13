@@ -471,22 +471,7 @@ offlineDownloadButton.onclick=async()=>{
     offlineDownloadStatus.textContent='Сура '+num+': сохранено '+offlineDownloadProgress.value+' из 3 частей. Осталось скачать: '+(missing.length-part-1)+'.';
    }
    if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
-   const keys=await cache.keys();
-   let evictedSurahs=0;
-   if(keys.length>18){
-    const older=[...new Set(keys.map(key=>new URL(key.url).pathname.match(/\/v1\/surah\/(\d+)\//)?.[1]).filter(id=>id&&Number(id)!==num))];
-    for(const id of older){
-     if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
-     if((await cache.keys()).length<=18)break;
-     let removedForSurah=false;
-     for(const key of await cache.keys()){
-      if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
-      if(new URL(key.url).pathname.includes('/v1/surah/'+id+'/')){removedForSurah=(await cache.delete(key))||removedForSurah;}
-     }
-     if(removedForSurah)evictedSurahs++;
-    }
-   }
-   offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена. Загружено частей: '+missing.length+(evictedSurahs?' Для освобождения памяти удалено старых офлайн-сур: '+evictedSurahs+'.':'');
+   offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена. Загружено частей: '+missing.length+'. Ранее скачанные суры сохранены.';
   }
   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
   offlineCancelButton.hidden=true;
