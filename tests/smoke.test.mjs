@@ -155,11 +155,16 @@ test('Quran cache validator rejects altered verse counts, numbering and surah id
  const validate=vm.runInContext('validQuranCacheResponse',context);
  const url=new URL('https://api.alquran.cloud/v1/surah/1/quran-uthmani');
  const makeResponse=(payload)=>({ok:true,clone(){return {json:async()=>payload}}});
- const good=()=>({code:200,data:{number:1,numberOfAyahs:7,ayahs:Array.from({length:7},(_,i)=>({numberInSurah:i+1,text:'بِسْمِ اللَّهِ'}))}});
+ const good=()=>({code:200,data:{number:1,numberOfAyahs:7,ayahs:Array.from({length:7},(_,i)=>({numberInSurah:i+1,number:i+1,text:'بِسْمِ اللَّهِ'}))}});
  assert.equal(await validate(makeResponse(good()),url),true);
  const truncated=good();truncated.data.ayahs.pop();assert.equal(await validate(makeResponse(truncated),url),false);
  const wrongSurah=good();wrongSurah.data.number=2;assert.equal(await validate(makeResponse(wrongSurah),url),false);
  const wrongOrder=good();wrongOrder.data.ayahs[3].numberInSurah=7;assert.equal(await validate(makeResponse(wrongOrder),url),false);
  const empty=good();empty.data.ayahs[2].text='';assert.equal(await validate(makeResponse(empty),url),false);
  const wrongCount=good();wrongCount.data.numberOfAyahs=8;assert.equal(await validate(makeResponse(wrongCount),url),false);
+ const missingGlobalNumber=good();delete missingGlobalNumber.data.ayahs[0].number;assert.equal(await validate(makeResponse(missingGlobalNumber),url),false);
+ const nonArabic=good();nonArabic.data.ayahs[0].text='example';assert.equal(await validate(makeResponse(nonArabic),url),false);
+ const excessiveText=good();excessiveText.data.ayahs[0].text='ب'.repeat(20001);assert.equal(await validate(makeResponse(excessiveText),url),false);
+ const wrongEditionUrl=new URL('https://api.alquran.cloud/v1/surah/1/ru.kuliev');
+ assert.equal(await validate(makeResponse(nonArabic),wrongEditionUrl),true);
 });
