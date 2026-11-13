@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {compareExactQuranText,validateReferenceProvenance} from './compare-quran-reference.mjs';
 import {compareCompleteQuran,VERSE_COUNTS} from './compare-complete-quran.mjs';
+import {validateCandidatePayload} from '../tools/export-quran-candidate.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
@@ -192,4 +193,15 @@ test('complete Quran comparator requires exactly 114 surahs and 6236 verses',()=
  assert.equal(VERSE_COUNTS.length,114);
  assert.equal(VERSE_COUNTS.reduce((a,b)=>a+b,0),6236);
  assert.throws(()=>compareCompleteQuran('/no-reviewed-quran-reference','/no-quran-candidate'),/ENOENT/);
+});
+
+test('API candidate export keeps Arabic text unmodified and rejects corrupted surahs',()=>{
+ const payload={code:200,data:{number:1,numberOfAyahs:7,ayahs:Array.from({length:7},(_,i)=>({number:i+1,numberInSurah:i+1,text:'بِسْمِ اللَّهِ'}))}};
+ const result=validateCandidatePayload(payload,1);
+ assert.equal(result.surah,1);
+ assert.equal(result.edition,'quran-uthmani');
+ assert.equal(result.ayahs[0].text,payload.data.ayahs[0].text);
+ assert.throws(()=>validateCandidatePayload(payload,2),/Invalid API candidate/);
+ const corrupted=structuredClone(payload);corrupted.data.ayahs[0].text='plain text';
+ assert.throws(()=>validateCandidatePayload(corrupted,1),/Invalid API candidate/);
 });
