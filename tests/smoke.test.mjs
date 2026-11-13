@@ -150,8 +150,8 @@ test('individual offline surah removal shows size and requires confirmation',()=
 });
 
 test('Quran cache validator rejects altered verse counts, numbering and surah identities',async()=>{
- const context=vm.createContext({});
- vm.runInContext(sw, {...context,self:{addEventListener(){}}});
+ const context=vm.createContext({self:{addEventListener(){}}});
+ vm.runInContext(sw,context);
  const validate=vm.runInContext('validQuranCacheResponse',context);
  const url=new URL('https://api.alquran.cloud/v1/surah/1/quran-uthmani');
  const makeResponse=(payload)=>({ok:true,clone(){return {json:async()=>payload}}});
