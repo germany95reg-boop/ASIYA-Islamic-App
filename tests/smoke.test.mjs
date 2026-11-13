@@ -48,3 +48,10 @@ test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
  assert.ok(html.includes('asiya-diagnostics-copy-fallback'));
  assert.ok(html.includes('fallback.select()'));
 });
+
+test('Quran API refreshes online before using offline fallback',()=>{
+ assert.match(sw,/const saved=await cache\.match\(request\);let response;try\{response=await fetch\(request\)\}catch\(error\)\{if\(saved\)return saved;throw error\}/);
+ assert.match(sw,/response\.ok&&response\.type!=='opaque'/);
+ assert.match(sw,/payload\.code===200/);
+ assert.match(sw,/QURAN_CACHE_LIMIT=18/);
+});
