@@ -125,3 +125,10 @@ test('legacy Quran cache migration verifies full surahs before copying',()=>{
  assert.ok(html.includes('await ensureLegacyQuranMigration()'));
  assert.ok(!html.includes('Офлайн-кеш ограничен 18 частями.'));
 });
+
+test('offline library reports measured download size and estimated browser quota',()=>{
+ assert.ok(html.includes("response.clone().arrayBuffer()).byteLength"));
+ assert.ok(html.includes("navigator.storage.estimate()"));
+ assert.ok(html.includes("remaining<10*1024*1024"));
+ assert.ok(html.includes("квота браузера не равна свободному месту телефона"));
+});
