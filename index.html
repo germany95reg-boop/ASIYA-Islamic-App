@@ -30,6 +30,13 @@ function updatePrayerNotificationButton(){if(!prayerNotificationSupported){praye
 prayerSystemButton.onclick=async()=>{if(!prayerNotificationSupported||Notification.permission==='denied')return;try{await Notification.requestPermission();updatePrayerNotificationButton();}catch{prayerNotifyInfo.textContent='Не удалось запросить разрешение на уведомления.';}};
 updatePrayerNotificationButton();
 prayerNotifyToggle.addEventListener('change',()=>{try{localStorage.setItem('asiya-prayer-foreground-alerts',prayerNotifyToggle.checked?'yes':'no');}catch{}});
+const prayerChoices=[['Fajr','Фаджр'],['Dhuhr','Зухр'],['Asr','Аср'],['Maghrib','Магриб'],['Isha','Иша']];
+const prayerEnabledKeys=new Set(prayerChoices.map(([key])=>key));
+try{const saved=JSON.parse(localStorage.getItem('asiya-prayer-enabled')||'null');if(Array.isArray(saved))for(const [key] of prayerChoices)if(!saved.includes(key))prayerEnabledKeys.delete(key);}catch{}
+const prayerChoiceBox=document.createElement('fieldset');prayerChoiceBox.style.border='1px solid #dce6df';prayerChoiceBox.style.borderRadius='12px';prayerChoiceBox.style.padding='12px';
+const prayerChoiceTitle=document.createElement('legend');prayerChoiceTitle.textContent='Для каких намазов напоминать';prayerChoiceBox.append(prayerChoiceTitle);
+for(const [key,label] of prayerChoices){const choiceLabel=document.createElement('label');choiceLabel.style.display='flex';choiceLabel.style.alignItems='center';choiceLabel.style.gap='10px';choiceLabel.style.margin='8px 0';const check=document.createElement('input');check.type='checkbox';check.checked=prayerEnabledKeys.has(key);check.addEventListener('change',()=>{if(check.checked)prayerEnabledKeys.add(key);else prayerEnabledKeys.delete(key);try{localStorage.setItem('asiya-prayer-enabled',JSON.stringify([...prayerEnabledKeys]));}catch{}});choiceLabel.append(check,document.createTextNode(label));prayerChoiceBox.append(choiceLabel);}
+prayerNotifyInfo.after(prayerChoiceBox);
 let prayerLastAlert='',prayerAutoRefreshDate='';
 const prayerCountdown=document.createElement('p');prayerCountdown.className='notice';prayerCountdown.setAttribute('role','status');prayerCountdown.setAttribute('aria-live','off');prayerCountdown.hidden=true;prayerRows.before(prayerCountdown);
 function startPrayerCountdown(timings,timezone,dateGregorian){
@@ -41,7 +48,7 @@ function startPrayerCountdown(timings,timezone,dateGregorian){
    const today=parts.day+'-'+parts.month+'-'+parts.year;
    if(today!==dateGregorian){prayerCountdown.textContent='Расписание за '+dateGregorian+'. Получаем время на новый день…';if(prayerAutoRefreshDate!==today&&navigator.onLine!==false){prayerAutoRefreshDate=today;prayerForm.requestSubmit();}return;}
    const now=Number(parts.hour)*3600+Number(parts.minute)*60+Number(parts.second);
-   if(prayerNotifyToggle.checked){for(const [key,label] of active){const m=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);if(!m)continue;const target=Number(m[1])*3600+Number(m[2])*60;const alertKey=today+':'+timezone+':'+key;if(now>=target&&now<target+60&&prayerLastAlert!==alertKey){prayerLastAlert=alertKey;prayerNotifyInfo.textContent='Наступило время намаза: '+label+'.';if('vibrate'in navigator)navigator.vibrate(200);
+   if(prayerNotifyToggle.checked){for(const [key,label] of active){if(!prayerEnabledKeys.has(key))continue;const m=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);if(!m)continue;const target=Number(m[1])*3600+Number(m[2])*60;const alertKey=today+':'+timezone+':'+key;if(now>=target&&now<target+60&&prayerLastAlert!==alertKey){prayerLastAlert=alertKey;prayerNotifyInfo.textContent='Наступило время намаза: '+label+'.';if('vibrate'in navigator)navigator.vibrate(200);
     if(prayerNotificationSupported&&Notification.permission==='granted'){try{new Notification('ASIYA · Время намаза',{body:'Наступило время молитвы: '+label,tag:'asiya-prayer-'+alertKey,icon:'./icon-192.png'});}catch{}}
     break;}}}
    const next=active.map(([key,label])=>{const match=String(timings[key]||'').match(/^(\d{1,2}):(\d{2})/);return match?{label,at:Number(match[1])*3600+Number(match[2])*60}:null;}).find(item=>item&&item.at>now);
