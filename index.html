@@ -260,7 +260,7 @@ async function refreshOfflineSurahs(){
  const info=document.createElement('p');info.className='muted';info.textContent='Проверяем сохранённые суры…';offlineList.append(info);
  if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';offlineScanRunning=false;return;}
  try{
-  const cache=await caches.open('asiya-quran-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
+  const cache=await caches.open('asiya-quran-offline-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
   for(const request of requests){
    const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
    if(!match)continue;const num=Number(match[1]);if(num<1||num>114)continue;
@@ -374,7 +374,7 @@ offlineDownloadButton.onclick=async()=>{
  notifyOfflineProgress(0,0);
  offlineDownloadProgress.value=0;offlineDownloadProgress.classList.remove('hidden');
  try{
-  const cache=await caches.open('asiya-quran-v1');
+  const cache=await caches.open('asiya-quran-offline-v1');
   const editions=['quran-uthmani','ru.kuliev','en.transliteration'];
   const missing=[];
   for(const edition of editions){
