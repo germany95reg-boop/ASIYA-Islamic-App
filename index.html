@@ -152,7 +152,7 @@ const offlineDownloadProgress=document.getElementById('offline-download-progress
 let offlineDownloadController=null;
 const offlineCancelButton=document.createElement('button');offlineCancelButton.type='button';offlineCancelButton.className='secondary';offlineCancelButton.textContent='Отменить загрузку';offlineCancelButton.hidden=true;offlineCancelButton.setAttribute('aria-controls','offline-download-progress');
 offlineDownloadProgress.insertAdjacentElement('afterend',offlineCancelButton);
-offlineCancelButton.onclick=()=>{if(offlineDownloadController&&!offlineDownloadController.signal.aborted){offlineCancelButton.disabled=true;offlineCancelButton.textContent='Отменяем…';offlineDownloadStatus.textContent='Отменяем загрузку… Уже сохранённые части останутся доступны.';offlineDownloadController.abort();}};
+offlineCancelButton.onclick=()=>{if(!offlineCancelButton.hidden&&offlineDownloadController&&!offlineDownloadController.signal.aborted){offlineCancelButton.disabled=true;offlineCancelButton.textContent='Отменяем…';offlineDownloadStatus.textContent='Отменяем загрузку… Уже сохранённые части останутся доступны.';offlineDownloadController.abort();}};
 offlineDownloadButton.onclick=async()=>{
  if(offlineDownloadController)return;
  if(!('caches' in window)){offlineDownloadStatus.textContent='Офлайн-хранилище недоступно';return;}
@@ -213,6 +213,7 @@ offlineDownloadButton.onclick=async()=>{
    offlineDownloadStatus.textContent='✓ Сура '+num+' сохранена. Загружено частей: '+missing.length;
   }
   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
+  offlineCancelButton.hidden=true;
   if(!offlineList.classList.contains('hidden')){try{await refreshOfflineSurahs();}catch(error){offlineDownloadStatus.textContent+=' Обновите список офлайн-сур вручную.';}}
   notifyOfflineResult(true);
  }catch(error){const reason=downloadController.signal.aborted?'Загрузка отменена пользователем.':navigator.onLine===false?'Соединение с интернетом потеряно.':error?.name==='AbortError'?'Время ожидания истекло.':/^HTTP 429/.test(error?.message||'')?'Сервер ограничил частоту запросов.':/^HTTP 5/.test(error?.message||'')?'Сервер временно недоступен.':error?.message==='Некорректные данные'?'Сервер вернул некорректные данные.':error?.message==='Ошибка проверки сохранённых данных'?'Не удалось проверить запись в офлайн-хранилище.':'Не удалось завершить скачивание.';offlineDownloadStatus.textContent=reason+' Сохранённые части не удалены. Повторите дозагрузку.';if(!offlineList.classList.contains('hidden')){try{await refreshOfflineSurahs();}catch(refreshError){offlineDownloadStatus.textContent+=' Не удалось обновить список; нажмите обновление вручную.';}}notifyOfflineResult(false,downloadController.signal.aborted);}
