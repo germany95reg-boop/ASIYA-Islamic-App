@@ -568,8 +568,24 @@ const asiyaCopyDiagnostics=document.getElementById('asiya-copy-diagnostics');
 let asiyaDiagnosticReport='';
 asiyaCopyDiagnostics.addEventListener('click',async()=>{
  if(!asiyaDiagnosticReport)return;
- try{await navigator.clipboard.writeText(asiyaDiagnosticReport);asiyaCopyDiagnostics.textContent='Скопировано ✓';}
- catch{asiyaCopyDiagnostics.textContent='Копирование недоступно';}
+ try{
+  if(!navigator.clipboard?.writeText)throw Error('Clipboard API unavailable');
+  await navigator.clipboard.writeText(asiyaDiagnosticReport);
+  asiyaCopyDiagnostics.textContent='Скопировано ✓';
+ }catch{
+  const fallback=document.createElement('textarea');
+  fallback.value=asiyaDiagnosticReport;
+  fallback.readOnly=true;
+  fallback.setAttribute('aria-label','Отчёт диагностики для копирования');
+  fallback.style.cssText='width:100%;min-height:180px;margin-top:12px;resize:vertical';
+  const existing=document.getElementById('asiya-diagnostics-copy-fallback');
+  existing?.remove();
+  fallback.id='asiya-diagnostics-copy-fallback';
+  asiyaDiagnosticResults.append(fallback);
+  fallback.focus();
+  fallback.select();
+  asiyaCopyDiagnostics.textContent='Выделен текст — скопируйте вручную';
+ }
 });
 
 asiyaDiagnosticButton.addEventListener('click',async()=>{
