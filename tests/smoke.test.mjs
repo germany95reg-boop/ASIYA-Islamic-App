@@ -55,7 +55,7 @@ test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
 
 test('Quran API refreshes online before using offline fallback',()=>{
  assert.ok(sw.includes('response=await fetch(request)'));
- assert.ok(sw.includes('if(saved&&await validQuranCacheResponse(saved,url))return saved'));
+ assert.ok(sw.includes('if(saved)return saved'));
  assert.match(sw,/response\.ok&&response\.type!=='opaque'/);
  assert.match(sw,/payload\.code===200/);
  assert.match(sw,/QURAN_CACHE_LIMIT=18/);
@@ -66,7 +66,7 @@ test('offline Quran library and service worker use the same cache',()=>{
  assert.ok(cacheName,'Service worker Quran cache missing');
  assert.ok(sw.includes("const QURAN_OFFLINE_CACHE='asiya-quran-offline-v1'"));
  assert.ok(html.includes("caches.open('asiya-quran-offline-v1')"),'Offline library must use durable Quran cache');
- assert.ok(sw.includes('await offlineCache.match(request)||await cache.match(request)'),'Service worker must read both durable and automatic caches');
+ assert.ok(sw.includes('const pinned=await offlineCache.match(request)')&&sw.includes('const automatic=await cache.match(request)'),'Service worker must read both durable and automatic caches');
  assert.match(html,/sameQuranVerseIndex\(results\[0\]\.value,results\[i\]\.value\)/);
  assert.match(html,/validateQuranEdition\(json\.data\?\.ayahs,edition\)/);
 });
@@ -104,13 +104,13 @@ test('corrupted Quran cache is rejected before offline fallback',()=>{
  assert.ok(sw.includes('async function validQuranCacheResponse(response,url)'));
  assert.ok(sw.includes('ayahs.length===QURAN_VERSE_COUNTS[num-1]'));
  assert.ok(sw.includes('a?.numberInSurah===i+1'));
- assert.ok(sw.includes('if(saved){await cache.delete(request);await offlineCache.delete(request)}throw error'));
+ assert.ok(sw.includes('if(pinned&&!pinnedValid)await offlineCache.delete(request)'));
 });
 
 test('invalid Quran API response uses only verified offline fallback',()=>{
  assert.ok(sw.includes("if(response.ok&&response.type!=='opaque'&&await validQuranCacheResponse(response,url))"));
- assert.ok(sw.includes("if(saved&&await validQuranCacheResponse(saved,url))return saved"));
- assert.ok(sw.includes("if(saved){await cache.delete(request);await offlineCache.delete(request)}return response"));
+ assert.ok(sw.includes('if(saved)return saved'));
+ assert.ok(sw.includes('if(automatic&&!automaticValid)await cache.delete(request)'));
 });
 
 test('manual Quran downloads survive automatic cache eviction and app upgrades',()=>{
@@ -213,4 +213,11 @@ test('Tanzil parser rejects missing, duplicate and malformed Quran verses',()=>{
  assert.throws(()=>parseTanzilText(Buffer.from('1|1|بِسْمِ اللَّهِ\n1|1|بِسْمِ اللَّهِ\n','utf8')),/Duplicate verse/);
  assert.throws(()=>parseTanzilText(Buffer.from('1|1|not Arabic\n','utf8')),/Missing Arabic/);
  assert.throws(()=>parseTanzilText(Buffer.from('invalid row\n','utf8')),/Unexpected Tanzil row format/);
+});
+
+test('corrupt pinned Quran cache cannot hide a valid automatic fallback',()=>{
+ assert.ok(sw.includes('const pinnedValid=pinned&&await validQuranCacheResponse(pinned,url)'));
+ assert.ok(sw.includes('const automaticValid=automatic&&await validQuranCacheResponse(automatic,url)'));
+ assert.ok(sw.includes('const saved=pinnedValid?pinned:automaticValid?automatic:null'));
+ assert.ok(!sw.includes('await cache.delete(request);await cache.put(request,response.clone())'));
 });
