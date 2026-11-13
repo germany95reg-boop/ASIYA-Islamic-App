@@ -228,3 +228,5 @@ test('deleted offline surahs cannot be restored by legacy cache migration',()=>{
  assert.ok(html.includes("const legacy=await caches.open('asiya-quran-v1');for(const request of await legacy.keys())await legacy.delete(request)"));
  assert.ok(html.includes("await legacy.delete(url);quranEditionCache.delete(num+':'+edition)"));
 });
+
+test('live Quran audit module exists and requires exact text comparison',()=>{ const source=readFileSync(new URL('../tools/audit-live-quran.mjs',import.meta.url),'utf8');assert.ok(source.includes('if(a!==b)'));assert.ok(source.includes("status:'error'"));assert.ok(source.includes('scholarlyCertified:false'));assert.ok(source.includes('referenceSha256:'));});
