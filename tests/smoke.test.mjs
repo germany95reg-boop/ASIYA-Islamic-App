@@ -221,3 +221,10 @@ test('corrupt pinned Quran cache cannot hide a valid automatic fallback',()=>{
  assert.ok(sw.includes('const saved=pinnedValid?pinned:automaticValid?automatic:null'));
  assert.ok(!sw.includes('await cache.delete(request);await cache.put(request,response.clone())'));
 });
+
+test('deleted offline surahs cannot be restored by legacy cache migration',()=>{
+ assert.ok(html.includes("localStorage.getItem('asiya-quran-legacy-migration-v1')==='complete'"));
+ assert.ok(html.includes("localStorage.setItem('asiya-quran-legacy-migration-v1','complete')"));
+ assert.ok(html.includes("const legacy=await caches.open('asiya-quran-v1');for(const request of await legacy.keys())await legacy.delete(request)"));
+ assert.ok(html.includes("await legacy.delete(url);quranEditionCache.delete(num+':'+edition)"));
+});
