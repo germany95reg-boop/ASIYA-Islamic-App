@@ -301,17 +301,32 @@ async function refreshOfflineSurahs(){
  if(!('caches' in window)){info.textContent='Этот браузер не поддерживает просмотр офлайн-кеша.';offlineScanRunning=false;return;}
  try{
   await ensureLegacyQuranMigration();
-  const cache=await caches.open('asiya-quran-offline-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0;
+  const cache=await caches.open('asiya-quran-offline-v1'),requests=await cache.keys(),bySurah=new Map();let invalidParts=0,storedBytes=0,measuredParts=0;
   for(const request of requests){
    const match=/\/v1\/surah\/(\d+)\/(quran-uthmani|ru\.kuliev|en\.transliteration)$/.exec(new URL(request.url).pathname);
    if(!match)continue;const num=Number(match[1]);if(num<1||num>114)continue;
-   const response=await cache.match(request);if(!(await validOfflineQuranResponse(response,num))){invalidParts++;await cache.delete(request);quranEditionCache.delete(num+':'+match[2]);continue;}if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
+   const response=await cache.match(request);if(!(await validOfflineQuranResponse(response,num))){invalidParts++;await cache.delete(request);quranEditionCache.delete(num+':'+match[2]);continue;}try{storedBytes+=(await response.clone().arrayBuffer()).byteLength;measuredParts++;}catch(error){console.warn('ASIYA: size measurement unavailable',error)}if(!bySurah.has(num))bySurah.set(num,new Set());bySurah.get(num).add(match[2]);
   }
   offlineList.replaceChildren();
   const heading=document.createElement('p');heading.className='muted';
   const ready=[...bySurah];
   const complete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].every(edition=>parts.has(edition))).length;heading.textContent=ready.length?'Сохранено сур: '+ready.length+' · полностью: '+complete+' · требуется дозагрузка: '+(ready.length-complete)+'. Скачанные суры хранятся отдельно от временного кеша.':'Пока нет сохранённых сур. Откройте суру с интернетом или скачайте её выше.';
   offlineList.append(heading);
+  const storageInfo=document.createElement('p');storageInfo.className='muted';storageInfo.setAttribute('role','status');
+  const formatBytes=bytes=>bytes>=1024*1024?(bytes/(1024*1024)).toFixed(1)+' МБ':bytes>=1024?(bytes/1024).toFixed(1)+' КБ':bytes+' Б';
+  storageInfo.textContent=measuredParts?'Размер сохранённого текста: ≈ '+formatBytes(storedBytes)+' ('+measuredParts+' частей).':'Размер сохранённого текста пока неизвестен.';
+  offlineList.append(storageInfo);
+  if(navigator.storage&&typeof navigator.storage.estimate==='function'){
+   try{
+    const estimate=await navigator.storage.estimate();
+    if(Number.isFinite(estimate.usage)&&Number.isFinite(estimate.quota)&&estimate.quota>0){
+     const remaining=Math.max(0,estimate.quota-estimate.usage);
+     storageInfo.textContent+=' · Использовано браузером: ≈ '+formatBytes(estimate.usage)+' из '+formatBytes(estimate.quota)+'. Доступно в квоте: ≈ '+formatBytes(remaining)+'.';
+     if(remaining<10*1024*1024)storageInfo.textContent+=' ⚠ Мало места в квоте браузера. Новые загрузки могут не сохраниться.';
+    }
+   }catch(error){console.warn('ASIYA: browser storage estimate unavailable',error)}
+  }
+  storageInfo.textContent+=' Размеры приблизительные; квота браузера не равна свободному месту телефона.';
   const report=document.createElement('p');report.className='muted';report.setAttribute('role','status');
   const incomplete=ready.filter(([,parts])=>['quran-uthmani','ru.kuliev','en.transliteration'].some(edition=>!parts.has(edition)));
   report.textContent='Проверка библиотеки: '+(invalidParts?'удалено повреждённых частей: '+invalidParts+'. ':'повреждённых частей не обнаружено. ')+(incomplete.length?'Неполных сур: '+incomplete.length+'. Для восстановления нажмите «Дозагрузить части».':'Все обнаруженные суры сохранены полностью.');
