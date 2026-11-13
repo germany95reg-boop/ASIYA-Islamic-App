@@ -140,3 +140,11 @@ test('manual Quran downloads are never automatically evicted at 18 cache parts',
  assert.ok(html.includes("error?.name==='QuotaExceededError'"));
  assert.ok(html.includes('Очистить все офлайн-суры'));
 });
+
+test('individual offline surah removal shows size and requires confirmation',()=>{
+ assert.ok(html.includes("surahBytes+=(await response.clone().arrayBuffer()).byteLength"));
+ assert.ok(html.includes("row.append(surahSize)"));
+ assert.ok(html.includes("window.confirm('Удалить офлайн-копию"));
+ assert.ok(html.includes("Избранное и отметки чтения сохранятся."));
+ assert.ok(html.includes("await cache.delete(url)"));
+});
