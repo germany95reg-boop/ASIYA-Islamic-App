@@ -76,3 +76,19 @@ test('Quran responses must contain the full declared number of verses',()=>{
  assert.ok(html.includes("Number(payload.data?.numberOfAyahs)!==7"),'Al-Fatiha diagnostics must check verse count');
  assert.ok(sw.includes("payload.data.numberOfAyahs===payload.data?.ayahs?.length"),'Service worker must not cache incomplete surah');
 });
+
+test('independent 114-surah Kufan/Hafs verse counts are consistent across app and service worker',()=>{
+ const pattern=/const QURAN_VERSE_COUNTS=Object\.freeze\(\[([\d,]+)\]\)/;
+ const reader=html.match(pattern),worker=sw.match(pattern);
+ assert.ok(reader&&worker,'Both Quran consumers must contain a verse count reference');
+ assert.equal(reader[1],worker[1],'Reader and service worker counts must match');
+ const counts=reader[1].split(',').map(Number);
+ assert.equal(counts.length,114);
+ assert.equal(counts.reduce((a,b)=>a+b,0),6236);
+ assert.equal(counts[0],7);
+ assert.equal(counts[1],286);
+ assert.equal(counts[113],6);
+ assert.ok(html.includes('json.data?.ayahs?.length!==QURAN_VERSE_COUNTS[num-1]'));
+ assert.ok(html.includes('ayahs?.length===QURAN_VERSE_COUNTS[num-1]'));
+ assert.ok(sw.includes('payload.data.ayahs.length===QURAN_VERSE_COUNTS['));
+});
