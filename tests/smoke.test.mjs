@@ -59,7 +59,9 @@ test('Quran API refreshes online before using offline fallback',()=>{
 test('offline Quran library and service worker use the same cache',()=>{
  const cacheName=sw.match(/const QURAN_CACHE='([^']+)'/)?.[1];
  assert.ok(cacheName,'Service worker Quran cache missing');
- assert.ok(html.includes("caches.open('"+cacheName+"')"),'Offline library cache must match service worker');
+ assert.ok(sw.includes("const QURAN_OFFLINE_CACHE='asiya-quran-offline-v1'"));
+ assert.ok(html.includes("caches.open('asiya-quran-offline-v1')"),'Offline library must use durable Quran cache');
+ assert.ok(sw.includes('await offlineCache.match(request)||await cache.match(request)'),'Service worker must read both durable and automatic caches');
  assert.match(html,/sameQuranVerseIndex\(results\[0\]\.value,results\[i\]\.value\)/);
  assert.match(html,/validateQuranEdition\(json\.data\?\.ayahs,edition\)/);
 });
@@ -104,4 +106,10 @@ test('invalid Quran API response uses only verified offline fallback',()=>{
  assert.ok(sw.includes("if(response.ok&&response.type!=='opaque'&&await validQuranCacheResponse(response,url))"));
  assert.ok(sw.includes("if(saved&&await validQuranCacheResponse(saved,url))return saved"));
  assert.ok(sw.includes("if(saved)await cache.delete(request);return response"));
+});
+
+test('manual Quran downloads survive automatic cache eviction and app upgrades',()=>{
+ assert.ok(sw.includes('key!==QURAN_OFFLINE_CACHE'),'Activation must preserve durable offline cache');
+ assert.ok(sw.includes('const QURAN_CACHE_LIMIT=18'),'Automatic cache remains bounded');
+ assert.ok(html.includes("caches.open('asiya-quran-offline-v1')"));
 });
