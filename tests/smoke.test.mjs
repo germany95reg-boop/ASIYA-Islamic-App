@@ -104,13 +104,13 @@ test('corrupted Quran cache is rejected before offline fallback',()=>{
  assert.ok(sw.includes('async function validQuranCacheResponse(response,url)'));
  assert.ok(sw.includes('ayahs.length===QURAN_VERSE_COUNTS[num-1]'));
  assert.ok(sw.includes('a?.numberInSurah===i+1'));
- assert.ok(sw.includes('if(saved)await cache.delete(request);throw error'));
+ assert.ok(sw.includes('if(saved){await cache.delete(request);await offlineCache.delete(request)}throw error'));
 });
 
 test('invalid Quran API response uses only verified offline fallback',()=>{
  assert.ok(sw.includes("if(response.ok&&response.type!=='opaque'&&await validQuranCacheResponse(response,url))"));
  assert.ok(sw.includes("if(saved&&await validQuranCacheResponse(saved,url))return saved"));
- assert.ok(sw.includes("if(saved)await cache.delete(request);return response"));
+ assert.ok(sw.includes("if(saved){await cache.delete(request);await offlineCache.delete(request)}return response"));
 });
 
 test('manual Quran downloads survive automatic cache eviction and app upgrades',()=>{
