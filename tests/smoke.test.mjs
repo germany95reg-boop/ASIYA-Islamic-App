@@ -63,3 +63,9 @@ test('offline Quran library and service worker use the same cache',()=>{
  assert.match(html,/sameQuranVerseIndex\(results\[0\]\.value,results\[i\]\.value\)/);
  assert.match(html,/validateQuranEdition\(json\.data\?\.ayahs,edition\)/);
 });
+
+test('Quran API identity is verified before displaying an edition',()=>{
+ assert.ok(html.includes("Number(json.data?.number)!==num"),'Reader must reject responses for a different surah');
+ assert.ok(html.includes("Number(payload.data?.number)!==1"),'Al-Fatiha diagnostics must check surah identity');
+ assert.ok(html.includes("sameQuranVerseIndex(results[0].value,results[i].value)"),'Edition alignment check must remain active');
+});
