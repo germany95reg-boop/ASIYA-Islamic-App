@@ -69,3 +69,10 @@ test('Quran API identity is verified before displaying an edition',()=>{
  assert.ok(html.includes("Number(payload.data?.number)!==1"),'Al-Fatiha diagnostics must check surah identity');
  assert.ok(html.includes("sameQuranVerseIndex(results[0].value,results[i].value)"),'Edition alignment check must remain active');
 });
+
+test('Quran responses must contain the full declared number of verses',()=>{
+ assert.ok(html.includes("json.data.numberOfAyahs!==json.data?.ayahs?.length"),'Reader must reject incomplete surah');
+ assert.ok(html.includes("payload.data.numberOfAyahs===ayahs?.length"),'Offline library must reject incomplete surah');
+ assert.ok(html.includes("Number(payload.data?.numberOfAyahs)!==7"),'Al-Fatiha diagnostics must check verse count');
+ assert.ok(sw.includes("payload.data.numberOfAyahs===payload.data?.ayahs?.length"),'Service worker must not cache incomplete surah');
+});
