@@ -175,10 +175,12 @@ offlineDownloadButton.onclick=async()=>{
    const stored=await cache.match(url);if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');if(!(await validOfflineQuranResponse(stored,num))){if(stored)await cache.delete(url);missing.push(edition);}
   }
   if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
-  offlineDownloadProgress.max=Math.max(1,missing.length);
+  offlineDownloadProgress.max=3;
+  offlineDownloadProgress.value=3-missing.length;
+  offlineDownloadProgress.setAttribute('aria-label','Загрузка суры '+num+': '+(3-missing.length)+' из 3 частей');
   notifyOfflineProgress(3-missing.length,3);
   if(!missing.length){
-   offlineDownloadProgress.value=1;
+   offlineDownloadProgress.value=3;
    offlineDownloadStatus.textContent='✓ Сура '+num+' уже полностью сохранена';
   }else{
    offlineDownloadStatus.textContent='Загружаем суру '+num+': 0 из '+missing.length+' недостающих частей…';
@@ -198,8 +200,9 @@ offlineDownloadButton.onclick=async()=>{
      if(controller.signal.aborted){await cache.delete(url);throw new DOMException('Время ожидания истекло','AbortError');}
     }finally{clearTimeout(timeout);downloadController.signal.removeEventListener('abort',cancelRequest);}
     if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
-    offlineDownloadProgress.value=part+1;
-    notifyOfflineProgress(3-missing.length+part+1,3);
+    offlineDownloadProgress.value=3-missing.length+part+1;
+    offlineDownloadProgress.setAttribute('aria-label','Загрузка суры '+num+': '+offlineDownloadProgress.value+' из 3 частей');
+    notifyOfflineProgress(offlineDownloadProgress.value,3);
     offlineDownloadStatus.textContent='Загружаем суру '+num+': '+(part+1)+' из '+missing.length+' недостающих частей…';
    }
    if(downloadController.signal.aborted)throw new DOMException('Загрузка отменена','AbortError');
