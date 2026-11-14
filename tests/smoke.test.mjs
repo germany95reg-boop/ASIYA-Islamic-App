@@ -273,3 +273,8 @@ test('service worker caches optional Tanzil asset without bypassing reader SHA v
  assert.match(html,/hash!==PINNED_TANZIL_SHA256/);
  assert.doesNotMatch(html,/function installPinnedTanzilControl/);
 });
+
+test('Pages deployment runs pinned Quran security checks',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
+ assert.match(workflow,/node --test tests\/smoke\.test\.mjs tests\/tanzil-source\.test\.mjs/);
+});
