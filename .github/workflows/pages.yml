@@ -25,6 +25,8 @@ jobs:
         run: |
           node --test tests/smoke.test.mjs tests/tanzil-source.test.mjs
           node tests/validate-word-registry.mjs
+      - name: Stage byte-identical Tanzil Quran text from official source
+        run: python3 tools/stage-official-tanzil.py
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static application
