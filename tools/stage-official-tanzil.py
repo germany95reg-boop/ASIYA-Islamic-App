@@ -46,8 +46,8 @@ def main():
             print("Original Tanzil 1.1 verified and staged without modification.")
             return 0
         print(f"Rejected download: {len(raw)} bytes; SHA-256 {digest}", file=sys.stderr)
-    print("No byte-identical official Tanzil source available. Keep API fallback; do not publish unverified text.", file=sys.stderr)
-    return 0
+    print("ERROR: byte-identical Tanzil source unavailable; refusing to publish an incomplete ASIYA build.", file=sys.stderr)
+    return 1
 
 if __name__ == "__main__":
     raise SystemExit(main())
