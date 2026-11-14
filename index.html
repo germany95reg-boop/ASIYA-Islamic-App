@@ -560,7 +560,7 @@ async function getAutomaticTanzil(){
    const parsed=await loadPinnedTanzilBytes(await response.arrayBuffer());
    pinnedTanzilAyahs=parsed;
    return parsed;
-  })().catch(()=>null);
+  })().catch(error=>{console.warn('ASIYA: verified Tanzil unavailable',error);pinnedTanzilLoadPromise=null;return null;});
  }
  return pinnedTanzilLoadPromise;
 }
