@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
       - name: Validate ASIYA before publishing
         run: |
-          node --test tests/smoke.test.mjs
+          node --test tests/smoke.test.mjs tests/tanzil-source.test.mjs
           node tests/validate-word-registry.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
