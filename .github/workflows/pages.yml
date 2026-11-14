@@ -27,6 +27,18 @@ jobs:
           node tests/validate-word-registry.mjs
       - name: Stage byte-identical Tanzil Quran text from official source
         run: python3 tools/stage-official-tanzil.py
+      - name: Verify original Tanzil is present in publish artifact
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          path = Path('quran-sources/tanzil-uthmani-1.1.txt')
+          assert path.is_file(), 'Tanzil source is absent: aborting publication'
+          raw = path.read_bytes()
+          assert len(raw) == 1384612, 'Unexpected Tanzil byte length'
+          assert hashlib.sha256(raw).hexdigest() == '4b91f9e6e8ac645d039e4ed85b3be492e795232a31cd22d668ac58238722e26f', 'Tanzil checksum mismatch'
+          print('Verified Tanzil Quran source will be included in Pages artifact.')
+          PY
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static application
