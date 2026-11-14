@@ -28,24 +28,26 @@ def main():
         print("Verified bundled Tanzil source.")
         return 0
     for options in OPTIONS:
-        request = urllib.request.Request(
-            ENDPOINT,
-            data=urllib.parse.urlencode(options).encode("ascii"),
-            headers={"User-Agent": "ASIYA-Quran-Source-Verification/1.0"},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=25) as response:
-                raw = response.read(2_000_001)
-        except Exception as exc:
-            print(f"Tanzil download unavailable: {exc}", file=sys.stderr)
-            continue
-        digest = hashlib.sha256(raw).hexdigest()
-        if len(raw) == EXPECTED_BYTES and digest == EXPECTED_SHA:
-            DEST.parent.mkdir(parents=True, exist_ok=True)
-            DEST.write_bytes(raw)
-            print("Original Tanzil 1.1 verified and staged without modification.")
-            return 0
-        print(f"Rejected download: {len(raw)} bytes; SHA-256 {digest}", file=sys.stderr)
+        params = urllib.parse.urlencode(options)
+        for method in ("POST", "GET"):
+            request = urllib.request.Request(
+                ENDPOINT if method == "POST" else ENDPOINT + "?" + params,
+                data=params.encode("ascii") if method == "POST" else None,
+                headers={"User-Agent": "ASIYA-Quran-Source-Verification/1.0"},
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=25) as response:
+                    raw = response.read(2_000_001)
+            except Exception as exc:
+                print(f"Tanzil {method} download unavailable: {exc}", file=sys.stderr)
+                continue
+            digest = hashlib.sha256(raw).hexdigest()
+            if len(raw) == EXPECTED_BYTES and digest == EXPECTED_SHA:
+                DEST.parent.mkdir(parents=True, exist_ok=True)
+                DEST.write_bytes(raw)
+                print("Original Tanzil 1.1 verified and staged without modification.")
+                return 0
+            print(f"Rejected {method} download: {len(raw)} bytes; SHA-256 {digest}", file=sys.stderr)
     print("ERROR: byte-identical Tanzil source unavailable; refusing to publish an incomplete ASIYA build.", file=sys.stderr)
     return 1
 
