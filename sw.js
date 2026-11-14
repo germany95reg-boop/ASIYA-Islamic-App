@@ -1,5 +1,5 @@
 const QURAN_VERSE_COUNTS=Object.freeze([7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6]);
-const CACHE='asiya-v22';const QURAN_CACHE='asiya-quran-v1';const QURAN_CACHE_LIMIT=18;const QURAN_OFFLINE_CACHE='asiya-quran-offline-v1';const APP=['./','./index.html','./manifest.webmanifest','./icon.svg'];const TANZIL_ASSET='quran-sources/tanzil-uthmani-1.1.txt';
+const CACHE='asiya-v23';const QURAN_CACHE='asiya-quran-v1';const QURAN_CACHE_LIMIT=18;const QURAN_OFFLINE_CACHE='asiya-quran-offline-v1';const APP=['./','./index.html','./manifest.webmanifest','./icon.svg'];const TANZIL_ASSET='quran-sources/tanzil-uthmani-1.1.txt';
 async function validQuranCacheResponse(response,url){
  if(!response||!response.ok)return false;
  try{
@@ -16,7 +16,7 @@ if(url.pathname.endsWith('/'+TANZIL_ASSET)){
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
   const cached=await cache.match(request);
-  if(cached&&cached.ok&&Number(cached.headers.get('content-length')||0)===1384612)return cached;
+  if(cached&&cached.ok){const cachedBytes=await cached.clone().arrayBuffer();if(cachedBytes.byteLength===1384612)return cached;}
   if(cached)await cache.delete(request);
   try{
    const response=await fetch(request);
@@ -25,7 +25,7 @@ if(url.pathname.endsWith('/'+TANZIL_ASSET)){
     if(bytes.byteLength===1384612)await cache.put(request,response.clone());
    }
    return response;
-  }catch{return cached||Response.error()}
+  }catch{return Response.error()}
  })());
  return;
 }
