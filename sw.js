@@ -16,7 +16,8 @@ if(url.pathname.endsWith('/'+TANZIL_ASSET)){
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
   const cached=await cache.match(request);
-  if(cached)return cached;
+  if(cached&&cached.ok&&Number(cached.headers.get('content-length')||0)===1384612)return cached;
+  if(cached)await cache.delete(request);
   try{
    const response=await fetch(request);
    if(response.ok&&response.type!=='opaque'&&Number(response.headers.get('content-length')||0)<=2000000){
