@@ -1,7 +1,7 @@
 {
-  "name": "ASIYA — Islamic App",
-  "short_name": "ASIYA",
-  "description": "Коран, намаз, дуа и исламские знания",
+  "name": "ASIYA & HAVA — Вера и жизнь",
+  "short_name": "ASIYA & HAVA",
+  "description": "Вера и жизнь. Коран, дуа, зикр и исламские знания",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
