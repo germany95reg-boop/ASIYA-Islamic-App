@@ -89,6 +89,23 @@ test('diagnostics checks three Quran editions and offers a copy fallback',()=>{
  assert.ok(html.includes('fallback.select()'));
 });
 
+test('cached Quran editions require exact verse counts for their surah',()=>{
+ const start=html.indexOf('const QURAN_VERSE_COUNTS=');
+ const fn=html.indexOf('function validateQuranEdition(');
+ assert.ok(start>=0&&fn>start);
+ const counts=html.slice(start,html.indexOf(';',start)+1);
+ const validator=html.slice(fn,html.indexOf('\nfunction sameQuranVerseIndex(',fn));
+ const context={};vm.createContext(context);
+ vm.runInContext(counts+'\n'+validator+'\nglobalThis.validate=validateQuranEdition;',context);
+ const verse=i=>({numberInSurah:i+1,number:i+1,text:'بِسْمِ'});
+ const seven=Array.from({length:7},(_,i)=>verse(i));
+ assert.equal(context.validate(seven,'quran-uthmani',1),true);
+ assert.equal(context.validate(seven,'quran-uthmani',2),false,'Surah 2 must contain 286 verses');
+ assert.equal(context.validate(seven.slice(0,6),'quran-uthmani',1),false);
+ assert.equal(context.validate(seven,'quran-uthmani',115),false);
+ assert.equal(context.validate(seven.map((v,i)=>({...v,numberInSurah:i+2})),'quran-uthmani',1),false);
+});
+
 test('Quran API refreshes online before using offline fallback',()=>{
  assert.ok(sw.includes('response=await fetch(request)'));
  assert.ok(sw.includes('if(saved)return saved'));
