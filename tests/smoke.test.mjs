@@ -46,6 +46,15 @@ test('service worker JavaScript parses and supports navigation refresh',()=>{
  assert.match(sw,/cache:'no-store'/);
 });
 
+test('offline Tanzil cache rejects byte-length-only impostors',()=>{
+ assert.match(sw,/async function validTanzilBytes\(bytes\)/);
+ assert.match(sw,/crypto\.subtle\.digest\('SHA-256',bytes\)/);
+ assert.match(sw,/return hex===TANZIL_SHA256/);
+ assert.match(sw,/if\(await validTanzilBytes\(cachedBytes\)\)return cached/);
+ assert.match(sw,/if\(await validTanzilBytes\(bytes\)\)await cache\.put/);
+ assert.doesNotMatch(sw,/if\(bytes\.byteLength===1384612\)await cache\.put/);
+});
+
 test('Quran word mode preserves the verse text and does not invent translations',()=>{
  assert.match(html,/p\.textContent=ayah\.text/);
  assert.ok(html.includes(String.raw`const tokens=ayah.text.trim().split(/\s+/u)`));
