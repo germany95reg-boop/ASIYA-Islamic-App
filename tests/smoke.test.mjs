@@ -26,6 +26,21 @@ test('inline application JavaScript parses',()=>{
  for(const script of scripts)new vm.Script(script);
 });
 
+test('ASIYA & HAVA branding is consistent and language selection preserves the name',()=>{
+ assert.match(html,/<h1>ASIYA &amp; HAVA<\/h1>/);
+ assert.match(html,/<title>ASIYA & HAVA — Вера и жизнь<\/title>/);
+ assert.equal(manifest.short_name,'ASIYA & HAVA');
+ assert.match(html,/brandMottos=\{/);
+ assert.match(html,/localStorage\.setItem\("asiya-brand-language",lang\)/);
+});
+
+test('word-study registry validates Arabic token alignment before showing a translation',()=>{
+ assert.match(html,/function matchingStudy\(ref,tokens\)/);
+ assert.match(html,/entry\.words\.length!==tokens\.length/);
+ assert.match(html,/normalize\(w\[0\]\)===normalize\(tokens\[i\]\)/);
+ assert.match(html,/if\(studyMatch\)/);
+});
+
 test('service worker JavaScript parses and supports navigation refresh',()=>{
  new vm.Script(sw);
  assert.match(sw,/request\.mode==='navigate'/);
@@ -36,7 +51,7 @@ test('Quran word mode preserves the verse text and does not invent translations'
  assert.match(html,/p\.textContent=ayah\.text/);
  assert.ok(html.includes(String.raw`const tokens=ayah.text.trim().split(/\s+/u)`));
  assert.match(html,/reconstructed!==normalizedOriginal/);
- assert.match(html,/перевод и чтение ожидают проверки/);
+ assert.match(html,/пословный перевод и латинская транслитерация ещё не сверены с источником/);
 });
 
 test('word source registry is not published without review',()=>{
