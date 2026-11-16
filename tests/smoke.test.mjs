@@ -46,6 +46,19 @@ test('service worker JavaScript parses and supports navigation refresh',()=>{
  assert.match(sw,/cache:'no-store'/);
 });
 
+test('Tanzil cache verifier rejects same-size tampering and accepts only pinned digest',async()=>{
+ const {webcrypto}=await import('node:crypto');
+ const sandbox={crypto:webcrypto,Uint8Array,Array};
+ vm.createContext(sandbox);
+ const source=sw.slice(sw.indexOf('const TANZIL_SHA256='),sw.indexOf("self.addEventListener('install'"));
+ vm.runInContext(source+';globalThis.verifyTanzil=validTanzilBytes;',sandbox);
+ assert.equal(await sandbox.verifyTanzil(new Uint8Array(1).buffer),false);
+ const fake=new Uint8Array(1384612);
+ assert.equal(await sandbox.verifyTanzil(fake.buffer),false,'Matching length must not bypass checksum');
+ fake[100]=42;
+ assert.equal(await sandbox.verifyTanzil(fake.buffer),false,'Altered same-size file must be rejected');
+});
+
 test('offline Tanzil cache rejects byte-length-only impostors',()=>{
  assert.match(sw,/async function validTanzilBytes\(bytes\)/);
  assert.match(sw,/crypto\.subtle\.digest\('SHA-256',bytes\)/);
