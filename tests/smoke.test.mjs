@@ -26,12 +26,11 @@ test('inline application JavaScript parses',()=>{
  for(const script of scripts)new vm.Script(script);
 });
 
-test('ASIYA & HAVA branding is consistent and language selection preserves the name',()=>{
+test('ASIYA & HAVA branding is consistent and partial localization is not advertised',()=>{
  assert.match(html,/<h1>ASIYA &amp; HAVA<\/h1>/);
  assert.match(html,/<title>ASIYA & HAVA — Вера и жизнь<\/title>/);
  assert.equal(manifest.short_name,'ASIYA & HAVA');
- assert.match(html,/brandMottos=\{/);
- assert.match(html,/localStorage\.setItem\("asiya-brand-language",lang\)/);
+ assert.doesNotMatch(html,/id="brand-language"/,'A motto-only selector must not imply full application translation');
 });
 
 test('word-study registry validates Arabic token alignment before showing a translation',()=>{
