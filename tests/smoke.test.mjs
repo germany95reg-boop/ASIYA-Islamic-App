@@ -313,7 +313,7 @@ test('main reader auto-detects pinned Tanzil with safe API fallback',()=>{
  assert.match(html,/getAutomaticTanzil\(\)/);
  assert.match(html,/fetch\('\.\/quran-sources\/tanzil-uthmani-1\.1\.txt'/);
  assert.match(html,/if\(edition==='quran-uthmani'&&pinnedTanzilAyahs\)/);
- assert.match(html,/const editions=\['quran-uthmani','ru.kuliev','en.transliteration'\]/);
+ assert.match(html,/const editions=\['quran-uthmani',selectedTranslation/);
  assert.doesNotMatch(html,/function installPinnedTanzilControl/);
  assert.match(html,/AlQuran Cloud \(резервный источник\)/);
 });
@@ -330,4 +330,15 @@ test('service worker caches optional Tanzil asset without bypassing reader SHA v
 test('Pages deployment runs pinned Quran security checks',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
  assert.match(workflow,/node --test tests\/smoke\.test\.mjs tests\/tanzil-source\.test\.mjs/);
+});
+
+
+test('Quran audio reciter selection and verse comparison are wired',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="reader-reciter"/);
+ assert.match(html,/allowedReciters=new Set/);
+ assert.match(html,/readerReciter\+'\/'\+ayah\.global\+'\.mp3'/);
+ assert.match(html,/id="reader-compare-select"/);
+ assert.match(html,/const compareIndex=selectedCompare/);
+ assert.match(html,/id="reader-transliteration-select"/);
 });
