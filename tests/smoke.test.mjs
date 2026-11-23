@@ -755,3 +755,11 @@ test('Qibla low-accuracy guidance does not imply precise zero-degree alignment',
  assert.match(html,/Не используйте совпадение стрелки с верхом телефона как подтверждение Киблы/);
  assert.match(html,/class="qibla-kaaba-icon"/);
 });
+
+
+test('iPhone compass subscribes to one heading stream without alpha fallback',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/if\(!isIosHeading\)return/);
+ assert.match(html,/window\.addEventListener\('deviceorientation',qiblaOrientationHandler\)/);
+ assert.doesNotMatch(html,/window\.addEventListener\('deviceorientationabsolute',qiblaOrientationHandler\)/);
+});
