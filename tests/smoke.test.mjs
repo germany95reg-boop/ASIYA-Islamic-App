@@ -634,3 +634,12 @@ test('home shortcuts navigate directly to Quran prayer dua and learning',()=>{
  for(const id of ['quran','prayer','dua','learn'])assert.match(html,new RegExp('class="tile home-shortcut" data-go="'+id+'"'));
  assert.match(html,/querySelectorAll\('\[data-go\]'\)/);
 });
+
+
+test('bottom navigation announces the active section accessibly',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/data-go="home" aria-current="page"/);
+ assert.match(html,/e\.setAttribute\('aria-current','page'\)/);
+ assert.match(html,/e\.removeAttribute\('aria-current'\)/);
+ assert.match(html,/\.nav \.tab\.active:before/);
+});
