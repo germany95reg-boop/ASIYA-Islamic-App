@@ -586,3 +586,11 @@ test('successful Quran review uses first spaced repetition interval of one day',
  assert.match(html,/intervals\[Math\.max\(0,streak-1\)\]/);
  assert.doesNotMatch(html,/success\?intervals\[streak\]:1/);
 });
+
+
+test('Quran review streak reaches sixth interval and stays capped',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/Math\.min\(6,\(\(previous&&Number\.isInteger\(previous\.streak\)/);
+ assert.match(html,/const intervals=\[1,2,4,7,14,30\]/);
+ assert.match(html,/intervals\[Math\.max\(0,streak-1\)\]/);
+});
