@@ -652,3 +652,14 @@ test('Quran reader controls remain accessible on narrow mobile screens',()=>{
  assert.match(html,/@media\(max-width:440px\)/);
  assert.match(html,/#quran \.reader-translation,#quran \.reader-transcription\{overflow-wrap:anywhere\}/);
 });
+
+
+test('Quran display settings are grouped in a collapsible panel',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/<details class="reader-preferences" id="reader-preferences">/);
+ assert.match(html,/<summary>⚙ Настройки отображения аятов<\/summary>/);
+ assert.match(html,/id="show-transcription" checked/);
+ assert.match(html,/id="show-translation" checked/);
+ assert.match(html,/id="follow-audio"/);
+ assert.match(html,/<\/details><div id="reader-verses"><\/div>/);
+});
