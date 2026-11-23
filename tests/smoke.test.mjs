@@ -415,3 +415,15 @@ test('Quran memorization self quiz hides Arabic text and schedules reviews',()=>
  assert.match(html,/saveReview\(num,ayah\.numberInSurah,true\)/);
  assert.match(html,/saveReview\(num,ayah\.numberInSurah,false\)/);
 });
+
+
+test('Quran recitation voice practice uses local microphone and releases audio resources',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/navigator\.mediaDevices\.getUserMedia\(\{audio:true\}\)/);
+ assert.match(html,/new MediaRecorder\(stream\)/);
+ assert.match(html,/function clearVoiceRecording\(\)/);
+ assert.match(html,/URL\.revokeObjectURL\(voiceUrl\)/);
+ assert.match(html,/URL\.createObjectURL\(blob\)/);
+ assert.match(html,/memorize-voice-player/);
+ assert.match(html,/memorize-voice-stop/);
+});
