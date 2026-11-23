@@ -505,3 +505,13 @@ test('Quran memorization report exports a printable local HTML summary',()=>{
  assert.match(html,/text\/html;charset=utf-8/);
  assert.match(html,/Отчёт создан локально/);
 });
+
+
+test('printable Quran report includes activity chart and per-surah progress',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/const activityBars=dayRows\.map/);
+ assert.match(html,/const bySurah=Array\.from\(\{length:114\}/);
+ assert.match(html,/Прогресс по сурам/);
+ assert.match(html,/Активность за 14 дней/);
+ assert.match(html,/\.bars\{display:flex/);
+});
