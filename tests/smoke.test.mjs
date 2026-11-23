@@ -569,3 +569,12 @@ test('weekly review plan includes memorized verses with no scheduled review',()=
  assert.match(html,/rawDay>today\?rawDay:today/);
  assert.match(html,/scheduled\[day\]=\(scheduled\[day\]\|\|0\)\+1/);
 });
+
+
+test('weekly Quran plan shows remaining daily learning goal',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/todayLearned=todayEntry&&Array\.isArray\(todayEntry\.learned\)/);
+ assert.match(html,/Math\.max\(0,goal-todayLearned\)/);
+ assert.match(html,/осталось/);
+ assert.match(html,/запланировано/);
+});
