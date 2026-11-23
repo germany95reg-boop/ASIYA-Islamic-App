@@ -494,3 +494,14 @@ test('backup import validates verse identifiers and supports merge or replace',(
  assert.match(html,/backupMode\.value==='replace'/);
  assert.match(html,/Прогресс объединён без удаления существующих отметок/);
 });
+
+
+test('Quran memorization report exports a printable local HTML summary',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-report-export"/);
+ assert.match(html,/reportExport\.onclick=/);
+ assert.match(html,/function escapeReport\(value\)/);
+ assert.match(html,/asiya-report-/);
+ assert.match(html,/text\/html;charset=utf-8/);
+ assert.match(html,/Отчёт создан локально/);
+});
