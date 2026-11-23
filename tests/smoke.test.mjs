@@ -370,3 +370,14 @@ test('memorization spaced repetition persists review dates and exposes due navig
  assert.match(html,/memorize-review-success/);
  assert.match(html,/Повторить завтра/);
 });
+
+
+test('whole Quran memorization dashboard counts saved states and navigates due reviews',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-dashboard"/);
+ assert.match(html,/id="memorize-dashboard-bar" max="6236"/);
+ assert.match(html,/function getDueVerses\(progress,reviews\)/);
+ assert.match(html,/function updateMemorizeDashboard\(\)/);
+ assert.match(html,/memorizeDashboardReview\.onclick=/);
+ assert.match(html,/openSurah\(parts\[0\],parts\[1\]\)/);
+});
