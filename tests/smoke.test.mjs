@@ -450,3 +450,13 @@ test('hard verses can be bookmarked and selected for focused memorization',()=>{
  assert.match(html,/setHardVerse\(num,ayah\.numberInSurah,true\)/);
  assert.match(html,/hardStart\.onclick=/);
 });
+
+
+test('detailed Quran review history records per-verse self-assessment outcomes',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-history-details"/);
+ assert.match(html,/const REVIEW_EVENTS_KEY='asiya-review-events-v1'/);
+ assert.match(html,/function recordReviewEvent\(key,success\)/);
+ assert.match(html,/function updateReviewHistory\(\)/);
+ assert.match(html,/recordReviewEvent\(key,success\)/);
+});
