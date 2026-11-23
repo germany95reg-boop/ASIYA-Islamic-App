@@ -381,3 +381,14 @@ test('whole Quran memorization dashboard counts saved states and navigates due r
  assert.match(html,/memorizeDashboardReview\.onclick=/);
  assert.match(html,/openSurah\(parts\[0\],parts\[1\]\)/);
 });
+
+
+test('daily Quran learning goal and seven-day activity history are wired',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-daily-goal"/);
+ assert.match(html,/id="memorize-history"/);
+ assert.match(html,/const STUDY_HISTORY_KEY='asiya-study-history-v1'/);
+ assert.match(html,/function recordStudy\(kind,key\)/);
+ assert.match(html,/recordStudy\('review',key\)/);
+ assert.match(html,/recordStudy\('learned',key\)/);
+});
