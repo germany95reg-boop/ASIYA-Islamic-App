@@ -155,6 +155,7 @@ const qiblaDiagnostics=document.createElement('details');qiblaDiagnostics.classN
 let qiblaRawHeading=null,qiblaLastDiagUpdate=0;
 function qiblaUpdateDiagnostics(){const fmt=v=>Number.isFinite(v)?v.toFixed(1)+'°':'нет данных';const relative=qiblaHeading===null||qiblaDegrees===null?null:normalizeBearing(qiblaDegrees-qiblaHeading);const age=qiblaLastSensorAt?Math.round(performance.now()-qiblaLastSensorAt):null;qiblaDiagOutput.textContent=['Источник: '+(qiblaRawHeading===null?'нет данных':'iOS webkitCompassHeading'),'Сырой угол iPhone: '+fmt(qiblaRawHeading),'Сглаженный угол: '+fmt(qiblaHeading),'Азимут Киблы: '+fmt(qiblaDegrees),'Кибла относительно телефона: '+fmt(relative),'Погрешность датчика: '+fmt(qiblaSensorAccuracy),'Возраст показания: '+(age===null?'нет данных':age+' мс'),'Образцов сглаживания: '+qiblaHeadingSamples.length,'Состояние: '+(qiblaListening?'включён':'выключен'),'Примечание: координаты не включены'].join('\\n').replaceAll('\\n','\n');}
 
+qiblaDiagnostics.addEventListener('toggle',()=>{if(qiblaDiagnostics.open)qiblaUpdateDiagnostics();});
 const qiblaStop=document.createElement('button');qiblaStop.type='button';qiblaStop.className='secondary';qiblaStop.textContent='Остановить компас';qiblaStop.hidden=true;qiblaQuality.after(qiblaStop);
 const qiblaManualForm=document.createElement('form');qiblaManualForm.style.marginTop='14px';
 const qiblaManualDetails=document.createElement('details'),qiblaManualSummary=document.createElement('summary');qiblaManualSummary.textContent='Ввести координаты вручную';
