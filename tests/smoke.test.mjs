@@ -338,6 +338,9 @@ test('Quran audio reciter selection and verse comparison are wired',()=>{
  assert.match(html,/id="reader-reciter"/);
  assert.match(html,/allowedReciters=new Set/);
  assert.match(html,/readerReciter\+'\/'\+ayah\.global\+'\.mp3'/);
+ assert.match(html,/let audioLoadTimer=null/);
+ assert.match(html,/clearTimeout\(audioLoadTimer\)/);
+ assert.match(html,/15000\);try\{await audio\.play\(\)/);
  assert.match(html,/id="reader-compare-select"/);
  assert.match(html,/const compareIndex=selectedCompare/);
  assert.match(html,/id="reader-transliteration-select"/);
