@@ -701,3 +701,15 @@ test('Qibla compass smooths circular headings and avoids full spins at north',()
  assert.match(html,/Math\.max\(-12,Math\.min\(12,delta\*\.14\)\)/);
  assert.match(html,/event\.webkitCompassAccuracy>45/);
 });
+
+
+test('Qibla dial has cardinal marks, 5-degree ticks and alignment guidance',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="qibla-rose" class="qibla-rose"/);
+ assert.match(html,/id="qibla-ticks" class="qibla-ticks"/);
+ assert.match(html,/id="qibla-alignment" class="qibla-alignment"/);
+ assert.match(html,/for\(let deg=0;deg<360;deg\+=5\)/);
+ assert.match(html,/deg%30===0\?' major'/);
+ assert.match(html,/Вы направлены к Кибле/);
+ assert.match(html,/qiblaRose\.style\.transform/);
+});
