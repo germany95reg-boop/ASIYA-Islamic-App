@@ -721,3 +721,12 @@ test('Qibla dial has no misleading stationary Kaaba marker and uses iOS compass 
  assert.match(html,/heading=normalizeBearing\(event\.webkitCompassHeading\)/);
  assert.match(html,/Кибла.*справа/);
 });
+
+
+test('Kaaba marker is a child of the rotating Qibla needle, not a stationary compass overlay',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/<div id="qibla-arrow" class="qibla-needle"[^>]*><span class="qibla-needle-tip"><\/span><span class="qibla-needle-tail"><\/span><span class="qibla-target" aria-hidden="true">🕋<\/span><\/div>/);
+ assert.match(html,/\.qibla-target\{position:absolute/);
+ assert.match(html,/qiblaArrow\.style\.transform='rotate\('\+qiblaArrowAngle\+'deg\)'/);
+ assert.doesNotMatch(html,/class="qibla-kaaba"/);
+});
