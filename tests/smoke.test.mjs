@@ -427,3 +427,15 @@ test('Quran recitation voice practice uses local microphone and releases audio r
  assert.match(html,/memorize-voice-player/);
  assert.match(html,/memorize-voice-stop/);
 });
+
+
+test('recitation comparison supports switching recordings and playback speed',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/function stopComparisonAudio\(\)/);
+ assert.match(html,/memorize-comparison-controls/);
+ assert.match(html,/playReciter\.onclick=async/);
+ assert.match(html,/playMine\.onclick=async/);
+ assert.match(html,/repeatReciter\.onclick=/);
+ assert.match(html,/comparisonAudio\.playbackRate=Number\(compareSpeed\.value\)/);
+ assert.match(html,/voicePlayer\.playbackRate=Number\(compareSpeed\.value\)/);
+});
