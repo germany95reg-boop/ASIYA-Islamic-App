@@ -614,6 +614,6 @@ test('invalid calendar review dates become due instead of disappearing',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.match(html,/function validReviewDay\(value\)/);
  assert.match(html,/date\.getMonth\(\)\+1===Number\(value\.slice\(5,7\)\)/);
- assert.match(html,/!validReviewDay\(entry\.due\)\|\|entry\.due<=reviewDay\(\)/);
+ assert.match(html,/!entry\|\|typeof entry!=='object'\|\|!validReviewDay\(entry\.due\)\|\|entry\.due<=reviewDay\(\)/);
  assert.match(html,/validReviewDay\(rawDay\)&&rawDay>today\?rawDay:today/);
 });
