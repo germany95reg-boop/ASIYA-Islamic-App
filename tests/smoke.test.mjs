@@ -525,3 +525,11 @@ test('memorization report preview shares export builder and uses sandboxed ifram
  assert.match(html,/reportFrame\.srcdoc=buildMemorizeReport\(\)/);
  assert.match(html,/const html=buildMemorizeReport\(\)/);
 });
+
+
+test('mobile Quran report preview loads eagerly and keeps iframe isolated',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-report-frame"[^>]*sandbox="" loading="eager" referrerpolicy="no-referrer"/);
+ assert.match(html,/height:min\(65vh,540px\);min-height:300px/);
+ assert.match(html,/reportPanel\.hidden=false;reportFrame\.srcdoc=buildMemorizeReport\(\)/);
+});
