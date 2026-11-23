@@ -549,7 +549,15 @@ test('memorization CSV export includes all 114 surahs and spreadsheet-friendly e
  assert.match(html,/id="memorize-report-csv"/);
  assert.match(html,/reportCsv\.onclick=/);
  assert.match(html,/Array\.from\(\{length:114\}/);
- assert.match(html,/Сура;Всего аятов;Выучено;Изучается;Прогресс \(%\)/);
+ assert.match(html,/Сура;Всего аятов;Выучено;Изучается;К повторению;Прогресс \(%\)/);
  assert.match(html,/text\/csv;charset=utf-8/);
  assert.match(html,/\['\\uFEFF'\+lines\.join\('\\r\\n'\)\]/);
+});
+
+
+test('CSV report includes due-review counts for each surah',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/const dueBySurah=Array\(114\)\.fill\(0\)/);
+ assert.match(html,/getDueVerses\(progress,getReviews\(\)\)/);
+ assert.match(html,/dueBySurah\[x\.number-1\]/);
 });
