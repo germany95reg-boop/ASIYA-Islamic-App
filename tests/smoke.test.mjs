@@ -763,3 +763,14 @@ test('iPhone compass subscribes to one heading stream without alpha fallback',()
  assert.match(html,/window\.addEventListener\('deviceorientation',qiblaOrientationHandler\)/);
  assert.doesNotMatch(html,/window\.addEventListener\('deviceorientationabsolute',qiblaOrientationHandler\)/);
 });
+
+
+test('Qibla diagnostics exposes raw and smoothed heading without coordinates',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/Диагностика компаса/);
+ assert.match(html,/Сырой угол iPhone/);
+ assert.match(html,/Сглаженный угол/);
+ assert.match(html,/Погрешность датчика/);
+ assert.match(html,/Примечание: координаты не включены/);
+ assert.match(html,/qiblaRawHeading=heading/);
+});
