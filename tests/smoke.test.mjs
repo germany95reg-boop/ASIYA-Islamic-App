@@ -561,3 +561,11 @@ test('CSV report includes due-review counts for each surah',()=>{
  assert.match(html,/getDueVerses\(progress,getReviews\(\)\)/);
  assert.match(html,/dueBySurah\[x\.number-1\]/);
 });
+
+
+test('weekly review plan includes memorized verses with no scheduled review',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/for\(const \[key,level\] of Object\.entries\(progress\)\)\{if\(level!==2\|\|!validVerseKey\(key\)\)continue/);
+ assert.match(html,/rawDay>today\?rawDay:today/);
+ assert.match(html,/scheduled\[day\]=\(scheduled\[day\]\|\|0\)\+1/);
+});
