@@ -402,3 +402,16 @@ test('seven day Quran study plan shows scheduled reviews and next new verse',()=
  assert.match(html,/function updateMemorizeWeekPlan\(progress,reviews\)/);
  assert.match(html,/updateMemorizeWeekPlan\(progress,reviews\)/);
 });
+
+
+test('Quran memorization self quiz hides Arabic text and schedules reviews',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-quiz-start"/);
+ assert.match(html,/function showQuizVerse\(\)/);
+ assert.match(html,/function endMemorizeQuiz\(\)/);
+ assert.match(html,/memorize-quiz-arabic/);
+ assert.match(html,/quizRemember\.onclick=/);
+ assert.match(html,/quizRetry\.onclick=/);
+ assert.match(html,/saveReview\(num,ayah\.numberInSurah,true\)/);
+ assert.match(html,/saveReview\(num,ayah\.numberInSurah,false\)/);
+});
