@@ -725,8 +725,16 @@ test('Qibla dial has no misleading stationary Kaaba marker and uses iOS compass 
 
 test('Kaaba marker is a child of the rotating Qibla needle, not a stationary compass overlay',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.match(html,/<div id="qibla-arrow" class="qibla-needle"[^>]*><span class="qibla-needle-tip"><\/span><span class="qibla-needle-tail"><\/span><span class="qibla-target" aria-hidden="true">🕋<\/span><\/div>/);
+ assert.match(html,/<div id="qibla-arrow" class="qibla-needle"[^>]*><span class="qibla-needle-tip"><\/span><span class="qibla-needle-tail"><\/span><span class="qibla-target" aria-hidden="true"><span class="qibla-kaaba-building"><\/span><\/span><\/div>/);
  assert.match(html,/\.qibla-target\{position:absolute/);
  assert.match(html,/qiblaArrow\.style\.transform='rotate\('\+qiblaArrowAngle\+'deg\)'/);
  assert.doesNotMatch(html,/class="qibla-kaaba"/);
+});
+
+
+test('Qibla confirmation requires known compass accuracy at most ten degrees',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/qiblaSensorAccuracy!==null&&qiblaSensorAccuracy<=10/);
+ assert.match(html,/Точность компаса недостаточна для подтверждения Киблы/);
+ assert.match(html,/class="qibla-kaaba-building"/);
 });
