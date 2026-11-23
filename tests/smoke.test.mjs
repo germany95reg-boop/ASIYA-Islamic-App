@@ -347,3 +347,15 @@ test('Quran audio reciter selection and verse comparison are wired',()=>{
  assert.match(html,/const compareIndex=selectedCompare/);
  assert.match(html,/id="reader-transliteration-select"/);
 });
+
+
+test('Quran memorization tracks verse learning locally without changing Arabic source',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="reader-memorize-mode"/);
+ assert.match(html,/id="memorize-progress"/);
+ assert.match(html,/const MEMORIZE_KEY='asiya-memorize-progress-v1'/);
+ assert.match(html,/function setMemorizeLevel\(surah,ayah,level\)/);
+ assert.match(html,/function updateMemorizeProgress\(\)/);
+ assert.match(html,/level\.addEventListener\('change'/);
+ assert.match(html,/item\.append\(level\)/);
+});
