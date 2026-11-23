@@ -578,3 +578,11 @@ test('weekly Quran plan shows remaining daily learning goal',()=>{
  assert.match(html,/осталось/);
  assert.match(html,/запланировано/);
 });
+
+
+test('successful Quran review uses first spaced repetition interval of one day',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/const intervals=\[1,2,4,7,14,30\]/);
+ assert.match(html,/intervals\[Math\.max\(0,streak-1\)\]/);
+ assert.doesNotMatch(html,/success\?intervals\[streak\]:1/);
+});
