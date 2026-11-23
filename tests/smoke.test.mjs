@@ -683,3 +683,12 @@ test('prayer reminder checkbox labels use two-column mobile grid',()=>{
  assert.match(html,/\.prayer-choice-box \.prayer-choice\{display:grid!important;grid-template-columns:24px minmax\(0,1fr\)/);
  assert.match(html,/\.prayer-choice-box \.prayer-choice input\[type=checkbox\]\{width:22px!important/);
 });
+
+
+test('Qibla compass accounts for iPhone screen rotation and handles missing sensor data',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/event\.webkitCompassHeading\+\(screen\.orientation\?\.angle\|\|0\)/);
+ assert.match(html,/qiblaLocate\.onclick=\(\)=>\{qiblaStopCompass\(\)/);
+ assert.match(html,/qiblaManualForm\.onsubmit=event=>\{event\.preventDefault\(\);qiblaStopCompass\(\)/);
+ assert.match(html,/if\(!received&&qiblaListening\)\{qiblaStopCompass\(\)/);
+});
