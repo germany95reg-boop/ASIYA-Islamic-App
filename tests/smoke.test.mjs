@@ -471,3 +471,15 @@ test('Quran learning analytics includes 14-day chart, success rate and difficult
  assert.match(html,/Math\.round\(successful\/events\.length\*100\)/);
  assert.match(html,/updateReviewHistory\(\);updateMemorizeAnalytics\(\)/);
 });
+
+
+test('Quran memorization backup supports export and confirmed import',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-backup-export"/);
+ assert.match(html,/id="memorize-backup-import"/);
+ assert.match(html,/const BACKUP_KEYS=\[/);
+ assert.match(html,/asiya-memorization-backup/);
+ assert.match(html,/backupExport\.onclick=/);
+ assert.match(html,/backupImport\.onchange=async/);
+ assert.match(html,/confirm\('Заменить текущий прогресс/);
+});
