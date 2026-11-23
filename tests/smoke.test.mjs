@@ -692,3 +692,12 @@ test('Qibla compass accounts for iPhone screen rotation and handles missing sens
  assert.match(html,/qiblaManualForm\.onsubmit=event=>\{event\.preventDefault\(\);qiblaStopCompass\(\)/);
  assert.match(html,/if\(!received&&qiblaListening\)\{qiblaStopCompass\(\)/);
 });
+
+
+test('Qibla compass smooths circular headings and avoids full spins at north',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/qiblaArrowAngle\+=\(\(relative-normalizeBearing\(qiblaArrowAngle\)\+540\)%360\)-180/);
+ assert.match(html,/if\(now-qiblaLastSensorAt<70\)return/);
+ assert.match(html,/Math\.max\(-12,Math\.min\(12,delta\*\.14\)\)/);
+ assert.match(html,/event\.webkitCompassAccuracy>45/);
+});
