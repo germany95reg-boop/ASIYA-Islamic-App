@@ -439,3 +439,14 @@ test('recitation comparison supports switching recordings and playback speed',()
  assert.match(html,/comparisonAudio\.playbackRate=Number\(compareSpeed\.value\)/);
  assert.match(html,/voicePlayer\.playbackRate=Number\(compareSpeed\.value\)/);
 });
+
+
+test('hard verses can be bookmarked and selected for focused memorization',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-hard-start"/);
+ assert.match(html,/const HARD_VERSES_KEY='asiya-hard-verses-v1'/);
+ assert.match(html,/function getHardVerses\(\)/);
+ assert.match(html,/function setHardVerse\(surah,ayah,hard\)/);
+ assert.match(html,/setHardVerse\(num,ayah\.numberInSurah,true\)/);
+ assert.match(html,/hardStart\.onclick=/);
+});
