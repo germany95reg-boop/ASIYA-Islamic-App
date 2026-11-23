@@ -337,7 +337,9 @@ test('Quran audio reciter selection and verse comparison are wired',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.match(html,/id="reader-reciter"/);
  assert.match(html,/allowedReciters=new Set/);
- assert.match(html,/readerReciter\+'\/'\+ayah\.global\+'\.mp3'/);
+ assert.match(html,/readerReciter==='ar\.sudais'\?'192':'128'/);
+ assert.match(html,/\+readerReciter\+'\/'\+ayah\.global\+'\.mp3'/);
+ assert.match(html,/if\(saved==='ar\.abdurrahmaansudais'\)saved='ar\.sudais'/);
  assert.match(html,/let audioLoadTimer=null/);
  assert.match(html,/clearTimeout\(audioLoadTimer\)/);
  assert.match(html,/15000\);try\{await audio\.play\(\)/);
