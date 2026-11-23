@@ -687,7 +687,7 @@ test('prayer reminder checkbox labels use two-column mobile grid',()=>{
 
 test('Qibla compass accounts for iPhone screen rotation and handles missing sensor data',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.match(html,/event\.webkitCompassHeading\+\(screen\.orientation\?\.angle\|\|0\)/);
+ assert.match(html,/heading=normalizeBearing\(event\.webkitCompassHeading\)/);
  assert.match(html,/qiblaLocate\.onclick=\(\)=>\{qiblaStopCompass\(\)/);
  assert.match(html,/qiblaManualForm\.onsubmit=event=>\{event\.preventDefault\(\);qiblaStopCompass\(\)/);
  assert.match(html,/if\(!received&&qiblaListening\)\{qiblaStopCompass\(\)/);
@@ -712,4 +712,12 @@ test('Qibla dial has cardinal marks, 5-degree ticks and alignment guidance',()=>
  assert.match(html,/deg%30===0\?' major'/);
  assert.match(html,/Вы направлены к Кибле/);
  assert.match(html,/qiblaRose\.style\.transform/);
+});
+
+
+test('Qibla dial has no misleading stationary Kaaba marker and uses iOS compass heading directly',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.doesNotMatch(html,/class="qibla-kaaba"/);
+ assert.match(html,/heading=normalizeBearing\(event\.webkitCompassHeading\)/);
+ assert.match(html,/Кибла.*справа/);
 });
