@@ -542,3 +542,14 @@ test('memorization report can be refreshed without closing preview',()=>{
  assert.match(html,/reportRefresh\.onclick=\(\)=>\{try\{reportFrame\.srcdoc=buildMemorizeReport\(\)/);
  assert.match(html,/Отчёт обновлён\./);
 });
+
+
+test('memorization CSV export includes all 114 surahs and spreadsheet-friendly encoding',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-report-csv"/);
+ assert.match(html,/reportCsv\.onclick=/);
+ assert.match(html,/Array\.from\(\{length:114\}/);
+ assert.match(html,/Сура;Всего аятов;Выучено;Изучается;Прогресс \(%\)/);
+ assert.match(html,/text\/csv;charset=utf-8/);
+ assert.match(html,/\['\\uFEFF'\+lines\.join\('\\r\\n'\)\]/);
+});
