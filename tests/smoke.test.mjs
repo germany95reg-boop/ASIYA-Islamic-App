@@ -515,3 +515,13 @@ test('printable Quran report includes activity chart and per-surah progress',()=
  assert.match(html,/Активность за 14 дней/);
  assert.match(html,/\.bars\{display:flex/);
 });
+
+
+test('memorization report preview shares export builder and uses sandboxed iframe',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-report-preview"/);
+ assert.match(html,/id="memorize-report-frame"[^>]*sandbox=""/);
+ assert.match(html,/function buildMemorizeReport\(\)/);
+ assert.match(html,/reportFrame\.srcdoc=buildMemorizeReport\(\)/);
+ assert.match(html,/const html=buildMemorizeReport\(\)/);
+});
