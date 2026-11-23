@@ -643,3 +643,12 @@ test('bottom navigation announces the active section accessibly',()=>{
  assert.match(html,/e\.removeAttribute\('aria-current'\)/);
  assert.match(html,/\.nav \.tab\.active:before/);
 });
+
+
+test('Quran reader controls remain accessible on narrow mobile screens',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/#quran \.reader-tools\{display:flex/);
+ assert.match(html,/#quran \.ayah-controls button,#quran \.ayah-controls select,#quran \.ayah-settings summary\{min-height:44px\}/);
+ assert.match(html,/@media\(max-width:440px\)/);
+ assert.match(html,/#quran \.reader-translation,#quran \.reader-transcription\{overflow-wrap:anywhere\}/);
+});
