@@ -594,3 +594,10 @@ test('Quran review streak reaches sixth interval and stays capped',()=>{
  assert.match(html,/const intervals=\[1,2,4,7,14,30\]/);
  assert.match(html,/intervals\[Math\.max\(0,streak-1\)\]/);
 });
+
+
+test('Quran dashboard rejects verse numbers outside their own surah',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/parts\[1\]<=QURAN_VERSE_COUNTS\[parts\[0\]-1\]&&reviewDue/);
+ assert.match(html,/if\(!validVerseKey\(key\)\)continue;if\(level===2\)learned\+\+/);
+});
