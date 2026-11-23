@@ -533,3 +533,12 @@ test('mobile Quran report preview loads eagerly and keeps iframe isolated',()=>{
  assert.match(html,/height:min\(65vh,540px\);min-height:300px/);
  assert.match(html,/reportPanel\.hidden=false;reportFrame\.srcdoc=buildMemorizeReport\(\)/);
 });
+
+
+test('memorization report can be refreshed without closing preview',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-report-refresh"/);
+ assert.match(html,/const reportRefresh=document\.getElementById\('memorize-report-refresh'\)/);
+ assert.match(html,/reportRefresh\.onclick=\(\)=>\{try\{reportFrame\.srcdoc=buildMemorizeReport\(\)/);
+ assert.match(html,/Отчёт обновлён\./);
+});
