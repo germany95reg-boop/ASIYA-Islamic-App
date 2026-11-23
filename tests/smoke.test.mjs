@@ -674,3 +674,12 @@ test('prayer page distinguishes sunrise from five obligatory prayers and groups 
  assert.match(html,/prayerSettings\.append\(prayerNotifyLabel,prayerNotifyInfo\)/);
  assert.match(html,/На iPhone и в фоновом режиме они могут не срабатывать/);
 });
+
+
+test('prayer reminder checkbox labels use two-column mobile grid',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/choiceLabel\.className='prayer-choice'/);
+ assert.match(html,/prayerChoiceBox\.className='prayer-choice-box'/);
+ assert.match(html,/\.prayer-choice-box \.prayer-choice\{display:grid!important;grid-template-columns:24px minmax\(0,1fr\)/);
+ assert.match(html,/\.prayer-choice-box \.prayer-choice input\[type=checkbox\]\{width:22px!important/);
+});
