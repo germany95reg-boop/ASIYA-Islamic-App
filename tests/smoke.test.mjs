@@ -626,3 +626,11 @@ test('mobile UX polish includes accessible focus and reduced motion',()=>{
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(html,/button:active:not\(:disabled\)/);
 });
+
+
+test('home shortcuts navigate directly to Quran prayer dua and learning',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/class="grid home-shortcuts"/);
+ for(const id of ['quran','prayer','dua','learn'])assert.match(html,new RegExp('class="tile home-shortcut" data-go="'+id+'"'));
+ assert.match(html,/querySelectorAll\('\[data-go\]'\)/);
+});
