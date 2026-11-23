@@ -617,3 +617,12 @@ test('invalid calendar review dates become due instead of disappearing',()=>{
  assert.match(html,/!entry\|\|typeof entry!=='object'\|\|!validReviewDay\(entry\.due\)\|\|entry\.due<=reviewDay\(\)/);
  assert.match(html,/validReviewDay\(rawDay\)&&rawDay>today\?rawDay:today/);
 });
+
+
+test('mobile UX polish includes accessible focus and reduced motion',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/button:focus-visible,a:focus-visible/);
+ assert.match(html,/\.nav \.tab\{min-height:48px/);
+ assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(html,/button:active:not\(:disabled\)/);
+});
