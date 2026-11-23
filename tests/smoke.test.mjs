@@ -738,3 +738,13 @@ test('Qibla confirmation requires known compass accuracy at most ten degrees',()
  assert.match(html,/Точность компаса недостаточна для подтверждения Киблы/);
  assert.match(html,/class="qibla-kaaba-building"/);
 });
+
+
+test('Qibla heading filters circular sensor samples and rejects stale alignment',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/qiblaHeadingSamples\.push\(heading\)/);
+ assert.match(html,/Math\.atan2\(sin,cos\)\*180\/Math\.PI/);
+ assert.match(html,/performance\.now\(\)-qiblaLastSensorAt<2000/);
+ assert.match(html,/qiblaSensorWatchdog=setInterval/);
+ assert.match(html,/Данные компаса устарели/);
+});
