@@ -483,3 +483,14 @@ test('Quran memorization backup supports export and confirmed import',()=>{
  assert.match(html,/backupImport\.onchange=async/);
  assert.match(html,/confirm\('Заменить текущий прогресс/);
 });
+
+
+test('backup import validates verse identifiers and supports merge or replace',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-backup-mode"/);
+ assert.match(html,/function validVerseKey\(key\)/);
+ assert.match(html,/function validateBackupItem\(key,raw\)/);
+ assert.match(html,/function mergeBackupItem\(key,current,incoming\)/);
+ assert.match(html,/backupMode\.value==='replace'/);
+ assert.match(html,/Прогресс объединён без удаления существующих отметок/);
+});
