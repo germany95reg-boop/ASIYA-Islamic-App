@@ -460,3 +460,14 @@ test('detailed Quran review history records per-verse self-assessment outcomes',
  assert.match(html,/function updateReviewHistory\(\)/);
  assert.match(html,/recordReviewEvent\(key,success\)/);
 });
+
+
+test('Quran learning analytics includes 14-day chart, success rate and difficult verses',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-analytics-chart"/);
+ assert.match(html,/id="memorize-analytics-summary"/);
+ assert.match(html,/id="memorize-analytics-hardest"/);
+ assert.match(html,/function updateMemorizeAnalytics\(\)/);
+ assert.match(html,/Math\.round\(successful\/events\.length\*100\)/);
+ assert.match(html,/updateReviewHistory\(\);updateMemorizeAnalytics\(\)/);
+});
