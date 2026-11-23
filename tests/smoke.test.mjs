@@ -663,3 +663,14 @@ test('Quran display settings are grouped in a collapsible panel',()=>{
  assert.match(html,/id="follow-audio"/);
  assert.match(html,/<\/details><div id="reader-verses"><\/div>/);
 });
+
+
+test('prayer page distinguishes sunrise from five obligatory prayers and groups reminders',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/<h2>Расписание намазов<\/h2>/);
+ assert.match(html,/\['Sunrise','Восход солнца'\]/);
+ assert.match(html,/Не является обязательным намазом/);
+ assert.match(html,/prayerSettings\.className='prayer-settings'/);
+ assert.match(html,/prayerSettings\.append\(prayerNotifyLabel,prayerNotifyInfo\)/);
+ assert.match(html,/На iPhone и в фоновом режиме они могут не срабатывать/);
+});
