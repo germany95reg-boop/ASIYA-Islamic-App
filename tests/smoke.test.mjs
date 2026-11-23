@@ -359,3 +359,14 @@ test('Quran memorization tracks verse learning locally without changing Arabic s
  assert.match(html,/level\.addEventListener\('change'/);
  assert.match(html,/item\.append\(level\)/);
 });
+
+
+test('memorization spaced repetition persists review dates and exposes due navigation',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/const REVIEW_KEY='asiya-memorize-reviews-v1'/);
+ assert.match(html,/function saveReview\(surah,ayah,success\)/);
+ assert.match(html,/function reviewDue\(surah,ayah,progress,reviews\)/);
+ assert.match(html,/id="memorize-next-review"/);
+ assert.match(html,/memorize-review-success/);
+ assert.match(html,/Повторить завтра/);
+});
