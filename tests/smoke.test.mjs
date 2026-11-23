@@ -392,3 +392,13 @@ test('daily Quran learning goal and seven-day activity history are wired',()=>{
  assert.match(html,/recordStudy\('review',key\)/);
  assert.match(html,/recordStudy\('learned',key\)/);
 });
+
+
+test('seven day Quran study plan shows scheduled reviews and next new verse',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="memorize-week-plan"/);
+ assert.match(html,/id="memorize-start-new"/);
+ assert.match(html,/function nextNewVerse\(progress\)/);
+ assert.match(html,/function updateMemorizeWeekPlan\(progress,reviews\)/);
+ assert.match(html,/updateMemorizeWeekPlan\(progress,reviews\)/);
+});
